@@ -1,11 +1,9 @@
 
 "use server"
 
-import { type FormDataProps } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
+import { type FormDataProps } from "@/utils/utils";
 import { redirect } from "next/navigation";
-
-
 
 
 export const userAuthenticated = async () =>{

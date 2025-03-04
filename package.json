@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:https":"npx next dev --port 443 --hostname meuapp.local --experimental-https --experimental-https-key ../../../certificates/localhost.key --experimental-https-cert ../../../certificates/com.crt",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

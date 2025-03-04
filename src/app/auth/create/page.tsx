@@ -1,17 +1,17 @@
 "use client";
 
-import * as S from "./styles";
-import { StyledForm, StyledInput, StyledTitle } from "@/components/forms/styles";
+import BtnAction from "@/components/BtnAction";
 import { FormMessage } from "@/components/forms/form-message";
-import { SubmitButton } from "@/components/forms/submit-button";
 import { Label } from "@/components/forms/label";
+import { StyledForm, StyledInput, StyledTitle } from "@/components/forms/styles";
+import { SubmitButton } from "@/components/forms/submit-button";
+import { useLogin } from "@/hooks/useLogin";
+import { signUpAction } from "@/services/actions/auth-actions";
+import type { CreateNewFormData } from "@/utils/utils";
+import { useMutation } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import BtnAction from "@/components/BtnAction";
-import { useLogin } from "@/hooks/useLogin";
-import { useMutation } from "@tanstack/react-query";
-import type { CreateNewFormData } from "@/utils/utils";
-import { signUpAction } from "@/services/actions/auth-actions";
+import * as S from "./styles";
 
 
 export default function Create() {

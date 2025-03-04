@@ -1,8 +1,7 @@
 "use client";
 
-import BtnAction from "@/components/BtnAction";
 import Container from "@/components/Container";
-import styled,{css} from "styled-components";
+import styled, { css } from "styled-components";
 
 export const Wrapper = styled.div`
   display: flex;
@@ -18,19 +17,6 @@ export const ContainerHome = styled(Container)`
   flex-direction: column;
 `;
 
-
-export const Body = styled.div`
-    width: 100%;
-
-    display: flex;
-    margin-inline: auto;
-    flex:1;
-    align-items: center;
-    max-height: 100vh;
-    height: 100%;
-    flex-direction: column;
-    padding-top: 5.6rem;
-`;
 
 export const PageTitle = styled.h1`
   margin-top: 3.5rem;
