@@ -33,12 +33,16 @@ export const updateSession = async (request: NextRequest) => {
     );
 
     const user = await supabase.auth.getUser();
+    const url = request.nextUrl;
 
-    if (request.nextUrl.pathname.startsWith("/dashboard") && user.error) {
-      return NextResponse.redirect(new URL("/auth/login", request.url));
+    if(url.pathname === "/dashboard"){
+      if(user.error){
+        return NextResponse.redirect(new URL("/auth/login", request.url));
+      }else if(url.searchParams.get("acct1") || url.searchParams.get("token1")){
+        url.pathname = "/api/deriv-session";
+        return NextResponse.redirect(url);
+      }
     }
-
-
 
     return response;
   } catch (e) {

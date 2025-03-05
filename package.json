@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:https":"npx next dev --port 443 --hostname meuapp.local --experimental-https --experimental-https-key ../../../certificates/localhost.key --experimental-https-cert ../../../certificates/com.crt",
+    "dev:https": "npx next dev --port 443 --hostname meuapp.local --experimental-https --experimental-https-key ../../../certificates/localhost.key --experimental-https-cert ../../../certificates/com.crt",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@deriv/deriv-api": "^1.0.15",
     "@hookform/resolvers": "^3.9.0",
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.46.1",
@@ -26,6 +27,7 @@
     "react-toastify": "^10.0.6",
     "styled-components": "^6.1.12",
     "use-mask-input": "^3.4.0",
+    "ws": "^8.18.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
