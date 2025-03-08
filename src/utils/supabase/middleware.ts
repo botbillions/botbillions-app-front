@@ -33,8 +33,11 @@ export const updateSession = async (request: NextRequest) => {
 
     if (url.pathname === "/dashboard") {
       if (error || !user) {
-        // Se não estiver autenticado, redireciona para login
         return NextResponse.redirect(new URL("/auth/login", request.url));
+      }
+    }else if(url.pathname === "/admin"){
+      if (error || !user) {
+        return NextResponse.redirect(new URL("/admin/login", request.url));
       }
     }
 

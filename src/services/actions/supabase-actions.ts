@@ -37,6 +37,29 @@ export const signInAction = async (formData?: FormDataProps) => {
   return redirect("/dashboard");
 };
 
+export const signInAdminAction = async (formData?: FormDataProps) => {
+  const email = formData?.email as string;
+  const password = formData?.password as string;
+  const supabase = await createClient();
+
+  const { data:{user},error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    let errorMessage =
+      error.code === "invalid_credentials" ? "Credenciais inválidas" : "Email não confirmado";
+    return { success: false, message: errorMessage };
+  }
+  if(user){
+    const {data:admin} = await supabase.from('admin').select('user_id').eq('user_id',user.id).single();
+    console.log(admin)
+    return redirect("/admin");
+  }
+
+};
+
 export const signUpAction = async (formData?: FormDataProps) => {
   const supabase = await createClient();
 

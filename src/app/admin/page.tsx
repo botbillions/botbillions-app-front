@@ -7,7 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import { MenuItemST } from "@/components/Sidebar/styles";
 import Configuracoes from "@/components/icons/Configuracoes";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { signOutAction } from "@/services/actions/auth-actions";
+import { signOutAction } from "@/services/actions/supabase-actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import * as S from './styles';
