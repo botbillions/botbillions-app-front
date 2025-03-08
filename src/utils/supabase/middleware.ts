@@ -18,34 +18,29 @@ export const updateSession = async (request: NextRequest) => {
             return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
-            );
-            response = NextResponse.next({
-              request,
-            });
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({ request });
             cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
+              response.cookies.set(name, value, options)
             );
           },
         },
-      },
+      }
     );
 
-    const user = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
     const url = request.nextUrl;
 
-    if(url.pathname === "/dashboard"){
-      if(user.error){
+    if (url.pathname === "/dashboard") {
+      if (error || !user) {
+        // Se não estiver autenticado, redireciona para login
         return NextResponse.redirect(new URL("/auth/login", request.url));
-      }else if(url.searchParams.get("acct1") || url.searchParams.get("token1")){
-        url.pathname = "/api/deriv-session";
-        return NextResponse.redirect(url);
       }
     }
 
     return response;
   } catch (e) {
+    console.error("Erro no updateSession:", e);
     return NextResponse.next({
       request: {
         headers: request.headers,

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Body from "@/components/Body";
 import Card from "@/components/Card";
@@ -8,33 +8,33 @@ import Inicio from "@/components/icons/Inicio";
 import Sidebar from "@/components/Sidebar";
 import { MenuItemST } from "@/components/Sidebar/styles";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { useLogin } from "@/hooks/useLogin";
-import { signOutAction } from "@/services/actions/auth-actions";
+import { useUser } from "@/contexts/UserContext";
+import { signOutAction } from "@/services/actions/supabase-actions";
 import Link from "next/link";
-import { useEffect } from "react";
 import * as S from "./styles";
 
 export default function Dashboard() {
   const { collapsed } = useSidebar();
-  const { fecthUser, user } = useLogin();
-  useEffect(() => {
-    fecthUser()
-  }, [])
+  const { user, userDeriv } = useUser();
 
   return (
     <S.Wrapper>
       <Sidebar logout={async () => await signOutAction()}>
-        <MenuItemST collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active> Início </MenuItemST>
-        <MenuItemST collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} href="/dashboard/operacao"> Operacao </MenuItemST>
+        <MenuItemST collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active>
+          Início
+        </MenuItemST>
+        <MenuItemST collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} href="/dashboard/operacao">
+          Operação
+        </MenuItemST>
       </Sidebar>
       <Container>
-        <Header name="Início">
-        </Header>
+        <Header name="Início" />
         {user && (
           <Body>
             <S.Introduction>
-              <p> Olá, {user.user_metadata.name}</p>
+              <p>Olá, {user.user_metadata.name}</p>
             </S.Introduction>
+            {userDeriv && <p>Conta Deriv vinculada: {userDeriv.email}</p>}
             <p style={{ marginBottom: "3rem" }}>Ações principais</p>
             <S.CardContainer>
               <Card>

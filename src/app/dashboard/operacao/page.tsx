@@ -8,17 +8,14 @@ import Inicio from "@/components/icons/Inicio";
 import Sidebar from "@/components/Sidebar";
 import { MenuItemST } from "@/components/Sidebar/styles";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { useLogin } from "@/hooks/useLogin";
-import { signOutAction } from "@/services/actions/auth-actions";
-import { useEffect } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { signOutAction } from "@/services/actions/supabase-actions";
 import * as S from "./styles";
 
-const Operaco = () => {
+const Operacao = () => {
   const { collapsed } = useSidebar();
-  const { fecthUser, user, userDeriv } = useLogin();
-  useEffect(() => {
-    fecthUser()
-  }, [])
+  const { user, userDeriv } = useUser();
+
   return (
     <S.Wrapper>
       <Sidebar logout={async () => await signOutAction()}>
@@ -47,4 +44,4 @@ const Operaco = () => {
   )
 }
 
-export default Operaco
+export default Operacao
