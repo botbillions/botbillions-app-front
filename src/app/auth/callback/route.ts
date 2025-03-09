@@ -1,3 +1,4 @@
+// src/app/auth/callback/route.ts
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -16,6 +17,5 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}${redirectTo}`);
   }
 
-  // URL to redirect to after sign up process completes
-  return NextResponse.redirect(`${origin}/protected`);
+  return NextResponse.redirect(`${origin}/dashboard`);
 }

@@ -6,7 +6,7 @@ import { Label } from "@/components/forms/label";
 import { StyledForm, StyledInput, StyledTitle } from "@/components/forms/styles";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { useLogin } from "@/hooks/useLogin";
-import { signInAction } from "@/services/actions/supabase-actions";
+import { signInAdminAction } from "@/services/actions/supabase-actions";
 import type { CreateNewFormData } from "@/utils/utils";
 import { useMutation } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
@@ -17,7 +17,7 @@ import * as S from "./styles";
 export default function Login() {
   const { handleSubmit, register, reset } = useLogin();
   const { mutate, isPending } = useMutation({
-    mutationFn: signInAction,
+    mutationFn: signInAdminAction,
   });
 
   const createNewContact = (data: CreateNewFormData) => {

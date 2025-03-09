@@ -26,9 +26,9 @@ export const Wrapper = styled(Sidebar)<{ collapsed: string | undefined }>`
 export const MenuHeader = styled.div`
   flex-shrink: 0;
   padding-bottom: 1rem;
-  padding-left: 1.6rem;
+  //padding-left: 1.6rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
 `;
 
 export const MenuBody = styled.div`
@@ -45,8 +45,8 @@ export const MenuFooter = styled.div`
   padding-bottom: 1.2rem;
 `;
 
-export const MenuItemST = styled(MenuItem)<{ collapsed: string | undefined; active?: boolean} >`
-  ${({ theme, collapsed,active }) => css`
+export const MenuItemST = styled(MenuItem)<{ collapsed: string | undefined; active?: boolean; link_out?:boolean} >`
+  ${({ theme, collapsed,active, link_out }) => css`
     color: ${theme.colors.white};
 
     a {
@@ -66,5 +66,9 @@ export const MenuItemST = styled(MenuItem)<{ collapsed: string | undefined; acti
         background-color: ${theme.colors.primary[500]} !important;
         border-radius: 0.8rem;
       `}
+    &.link_out{
+      background-color: ${theme.colors.secondary[500]} !important;
+      border-radius: 0.8rem;
+    }
   `}
 `;

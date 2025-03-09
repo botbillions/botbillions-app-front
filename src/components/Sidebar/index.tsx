@@ -1,21 +1,20 @@
 "use client";
 
-import React from "react";
-import Logo from "../icons/Logo";
-import * as S from "./styles";
-import { Menu } from "react-pro-sidebar";
-import Desconectar from "../icons/Desconectar";
-import CloseMenu from "../icons/CloseMenu";
-import OpenMenu from "../icons/OpenMenu";
 import { useSidebar } from "@/contexts/SidebarContext";
+import React from "react";
+import { Menu } from "react-pro-sidebar";
+import CloseMenu from "../icons/CloseMenu";
+import Desconectar from "../icons/Desconectar";
+import OpenMenu from "../icons/OpenMenu";
+import * as S from "./styles";
 
-interface ISidebarProps{
+interface ISidebarProps {
   logout: any
-  linkLogo?:string;
+  linkLogo?: string;
   children: React.ReactNode;
 }
 
-const Sidebar = ({logout,linkLogo,children}:ISidebarProps) => {
+const Sidebar = ({ logout, children }: ISidebarProps) => {
   const { collapsed, toggleCollapsed } = useSidebar();
 
 
@@ -28,7 +27,6 @@ const Sidebar = ({logout,linkLogo,children}:ISidebarProps) => {
           </button>
         ) : (
           <>
-            <Logo link={linkLogo} />
             <button style={{ background: "none" }} onClick={toggleCollapsed}>
               <CloseMenu />
             </button>
@@ -38,6 +36,14 @@ const Sidebar = ({logout,linkLogo,children}:ISidebarProps) => {
 
       <S.MenuBody>
         <Menu>
+          <S.MenuItemST
+            collapsed={collapsed ? "collapsed" : undefined}
+            href={process.env.NEXT_PUBLIC_DERIV_CREATE}
+            className="link_out"
+            style={{ marginBottom: "2rem" }}
+          >
+            Criar conta na corretora
+          </S.MenuItemST>
           {children}
         </Menu>
       </S.MenuBody>

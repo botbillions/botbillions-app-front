@@ -2,12 +2,13 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 
-import StyledComponentsRegistry from "@/lib/registry";
-import GoogleAnalytics from "@/lib/GoogleAnalytics";
+import { SidebarProvider } from "@/contexts/SidebarContext";
+import { UserProvider } from "@/contexts/UserContext";
 import Cookie from "@/lib/Cookie";
+import GoogleAnalytics from "@/lib/GoogleAnalytics";
+import StyledComponentsRegistry from "@/lib/registry";
 import ClientThemeProvider from "@/providers/ClientThemeProvider";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
-import { SidebarProvider } from "@/contexts/SidebarContext";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -33,7 +34,9 @@ const RootLayout = ({
           <StyledComponentsRegistry>
             <ClientThemeProvider>
               <SidebarProvider>
-              {children}
+                <UserProvider>
+                  {children}
+                </UserProvider>
               </SidebarProvider>
               <Cookie />
             </ClientThemeProvider>
