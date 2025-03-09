@@ -10,6 +10,7 @@ import { MenuItemST } from "@/components/Sidebar/styles";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useUser } from "@/contexts/UserContext";
 import { signOutAction } from "@/services/actions/supabase-actions";
+import Link from "next/link";
 import * as S from "./styles";
 
 const Operacao = () => {
@@ -19,8 +20,8 @@ const Operacao = () => {
   return (
     <S.Wrapper>
       <Sidebar logout={async () => await signOutAction()}>
-        <MenuItemST collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} href="/dashboard"> Início </MenuItemST>
-        <MenuItemST collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active> Operacao </MenuItemST>
+        <MenuItemST component={<Link href="/dashboard" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />}> Início </MenuItemST>
+        <MenuItemST component={<Link href="/dashboard/operacao" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active> Operacao </MenuItemST>
       </Sidebar>
       <Container>
         <Header name="Operação">

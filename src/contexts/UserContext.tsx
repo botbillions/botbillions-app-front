@@ -14,6 +14,7 @@ type UserContextType = {
   userDeriv: UserDeriv | null;
   fetchUser: () => Promise<void>;
   fetchUserDeriv: (urlSearch?: string) => Promise<void>;
+  status: 'error' | 'success' | 'loading';
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -22,7 +23,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
   const urlSearch = searchParams.toString();
 
-  const { fetchUser, fetchUserDeriv, user, userDeriv } = useLogin(urlSearch);
+  const { fetchUser, fetchUserDeriv, user, userDeriv, status } = useLogin(urlSearch);
 
   useEffect(() => {
     fetchUser();
@@ -30,7 +31,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, userDeriv, fetchUser, fetchUserDeriv }}>
+    <UserContext.Provider value={{ user, status, userDeriv, fetchUser, fetchUserDeriv }}>
       {children}
     </UserContext.Provider>
   );

@@ -68,7 +68,10 @@ export const Button = styled.button`
 `;
 
 export const Message = styled.p<{ $error?: boolean }>`
-  margin-top: 1rem;
-  font-size: 0.875rem;
-  color: ${({ $error, theme }) => ($error ? theme.colors.error[500] : theme.colors.success[500])};
+ ${({ theme,$error }) => css`
+    font-size: ${theme.font.sizes.small};
+    color: ${$error ? theme.colors.error[500] : theme.colors.success[500]};
+    background-color: ${theme.colors.primary[900]};
+    margin-top: 1rem;
+  `}
 `;

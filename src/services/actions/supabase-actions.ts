@@ -1,5 +1,6 @@
 "use server";
 
+import { cookiesHelper } from "@/utils/cookies";
 import { createClient } from "@/utils/supabase/server";
 import { type FormDataProps } from "@/utils/utils";
 import { redirect } from "next/navigation";
@@ -15,6 +16,7 @@ export const userAuthenticated = async () => {
 export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  cookiesHelper.removeAll();
   return redirect("/");
 };
 

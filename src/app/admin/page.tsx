@@ -18,7 +18,7 @@ export default function AdminPage() {
   const [botName, setBotName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const router = useRouter();
 
   // Manipular upload via seleção
@@ -54,9 +54,9 @@ export default function AdminPage() {
     }
   };
 
-  // Enviar o formulário
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStatus("loading")
     if (!file || !botName) {
       setError("Por favor, selecione um arquivo XML e insira um nome para o bot.");
       return;
@@ -74,12 +74,12 @@ export default function AdminPage() {
 
       const result = await response.json();
       if (response.ok) {
-        setSuccess("Bot importado com sucesso!");
+        setStatus("success");
         setFile(null);
         setBotName("");
         setTimeout(() => router.push("/admin"), 2000); // Redireciona ou recarrega
       } else {
-        setError(result.error || "Erro ao importar o bot.");
+        setError(result.error || "error");
       }
     } catch (err) {
       setError("Erro ao enviar o arquivo. Tente novamente.");
@@ -129,10 +129,12 @@ export default function AdminPage() {
               />
             </div>
 
-            {error && <S.Message $error>{error}</S.Message>}
-            {success && <S.Message>{success}</S.Message>}
+            {status === "success" && <S.Message>Bot importado com sucesso!</S.Message>}
+            {status === "error" && <S.Message>Erro ao salvar BOT</S.Message>}
 
-            <S.Button type="submit">Salvar Bot</S.Button>
+            <S.Button type="submit" disabled={status === "loading"}>
+              {status === "loading" ? "Salvando ..." : "Salvar Bot"}
+            </S.Button>
           </form>
         </Body>
       </Container>

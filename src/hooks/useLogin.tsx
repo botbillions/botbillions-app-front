@@ -10,24 +10,28 @@ import { useForm } from "react-hook-form";
 type UserDeriv = {
   email: string;
 };
-
+type Status = 'error' | 'success' | 'loading'
 export const useLogin = (urlSearch?: string) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateNewFormData>({
     resolver: zodResolver(createNewFormSchema),
   });
   const [user, setUser] = useState<User | null>(null);
   const [userDeriv, setUserDeriv] = useState<UserDeriv | null>(null);
+  const [status, setStatus] = useState<Status>('loading');
 
   const fetchUser = async () => {
     try {
       const authenticatedUser = await userAuthenticated();
       setUser(authenticatedUser);
+      setStatus('success');
     } catch (err) {
       console.error("Erro ao buscar usuário autenticado:", err);
+      setStatus('error')
     }
   };
 
   const fetchUserDeriv = async () => {
+    setStatus('loading')
     const derivCookie = document.cookie
       .split("; ")
       .find((row) => row.startsWith("derivData="));
@@ -74,14 +78,15 @@ export const useLogin = (urlSearch?: string) => {
         setUserDeriv({ email });
         document.cookie = `derivData=${JSON.stringify({ email })}; path=/; max-age=${60 * 60 * 24}`; // 1 dia
 
-        // Vincular no Supabase
         await linkDerivAccount(email);
+        setStatus('success')
       }
       ws.close();
     };
 
     ws.onerror = (err) => {
       console.error("Erro no WebSocket:", err);
+      setStatus('error');
       ws.close();
     };
 
@@ -99,5 +104,6 @@ export const useLogin = (urlSearch?: string) => {
     user,
     userDeriv,
     fetchUserDeriv,
+    status
   };
 };
