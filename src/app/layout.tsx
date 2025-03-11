@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 
+import { DerivProvider } from "@/contexts/DerivContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { UserProvider } from "@/contexts/UserContext";
 import Cookie from "@/lib/Cookie";
@@ -35,7 +36,9 @@ const RootLayout = ({
             <ClientThemeProvider>
               <SidebarProvider>
                 <UserProvider>
-                  {children}
+                  <DerivProvider>
+                    {children}
+                  </DerivProvider>
                 </UserProvider>
               </SidebarProvider>
               <Cookie />

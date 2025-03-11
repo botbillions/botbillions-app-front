@@ -10,7 +10,7 @@ import Sidebar from "@/components/Sidebar";
 import { MenuItemST } from "@/components/Sidebar/styles";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useUser } from "@/contexts/UserContext";
-import { signOutAction } from "@/services/actions/supabase-actions";
+import { signOutAction } from "@/services/actions/auth/supabase-actions";
 import Link from "next/link";
 import * as S from "./styles";
 

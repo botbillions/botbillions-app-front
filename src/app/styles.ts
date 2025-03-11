@@ -22,7 +22,7 @@ export const RedirectContainer = styled.div`
 export const CardBtnBox = styled.div`
   display: flex;
   gap: 3rem;
-  margin-right: 3rem;
+  margin: 0 auto;
   max-width: 35rem;
   width: 100%;
   height: 100%;

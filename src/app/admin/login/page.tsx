@@ -6,7 +6,7 @@ import { Label } from "@/components/forms/label";
 import { StyledForm, StyledInput, StyledTitle } from "@/components/forms/styles";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { useLogin } from "@/hooks/useLogin";
-import { signInAdminAction } from "@/services/actions/supabase-actions";
+import { signInAdminAction } from "@/services/actions/auth/supabase-actions";
 import type { CreateNewFormData } from "@/utils/utils";
 import { useMutation } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";

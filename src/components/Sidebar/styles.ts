@@ -54,6 +54,7 @@ export const MenuItemST = styled(MenuItem)<{ collapsed: string | undefined; acti
         justify-content: start;
       }
       padding-left: 15px!important;
+      margin: 1rem 0;
     }
 
     a:hover {
