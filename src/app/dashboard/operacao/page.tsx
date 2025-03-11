@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import Body from "@/components/Body";
 import BtnAction from "@/components/BtnAction";
@@ -26,12 +26,11 @@ const Operacao = () => {
         <MenuItemST component={<Link href="/dashboard/operacao" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active> Operação </MenuItemST>
       </Sidebar>
       <Container>
-        <Header name="Operação">
-        </Header>
+        <Header name="Operação" />
         <Body>
           {(user && userDeriv && botsDeriv) ? (
             botsDeriv.map(bot => (
-              <div id={bot.id}>
+              <div key={bot.id} id={bot.id}>
                 <p>{bot.name}</p>
               </div>
             ))
@@ -42,13 +41,15 @@ const Operacao = () => {
                 <BtnAction name="Conectar" link={process.env.NEXT_PUBLIC_DERIV_LOGIN} />
                 <BtnAction name="Criar conta" link={process.env.NEXT_PUBLIC_DERIV_CREATE} />
               </div>
-              <p style={{ maxWidth: "35rem", textAlign: "center" }}>* Observação: Se esta for sua primeira conexão, verifique a opção "autorizar" quando a corretora exibir opções de permissão.</p>
+              <p style={{ maxWidth: "35rem", textAlign: "center" }}>
+                * Observação: Se esta for sua primeira conexão, verifique a opção "autorizar" quando a corretora exibir opções de permissão.
+              </p>
             </S.Conect>
           )}
         </Body>
       </Container>
     </S.Wrapper>
-  )
-}
+  );
+};
 
-export default Operacao
+export default Operacao;

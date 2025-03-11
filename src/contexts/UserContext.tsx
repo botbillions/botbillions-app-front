@@ -1,12 +1,10 @@
 "use client";
 
 import { linkDerivAccount, userAuthenticated } from "@/services/actions/auth/supabase-actions";
-import { CreateNewFormData, createNewFormSchema } from "@/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 
 type UserDeriv = {
   email: string;
@@ -17,35 +15,33 @@ type UserContextType = {
   userDeriv: UserDeriv | null;
   fetchUser: () => Promise<void>;
   fetchUserDeriv: (urlSearch?: string) => Promise<void>;
-  status: 'error' | 'success' | 'loading';
+  status: "error" | "success" | "loading";
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
-type Status = 'error' | 'success' | 'loading'
+type Status = "error" | "success" | "loading";
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
   const urlSearch = searchParams.toString();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateNewFormData>({
-    resolver: zodResolver(createNewFormSchema),
-  });
-
   const [user, setUser] = useState<User | null>(null);
   const [userDeriv, setUserDeriv] = useState<UserDeriv | null>(null);
-  const [status, setStatus] = useState<Status>('loading');
+  const [status, setStatus] = useState<Status>("loading");
 
   const fetchUser = async () => {
+    setStatus("loading");
     try {
       const authenticatedUser = await userAuthenticated();
       setUser(authenticatedUser);
-      setStatus('success');
+      setStatus(authenticatedUser ? "success" : "error");
     } catch (err) {
-      setStatus('error')
+      setUser(null);
+      setStatus("error");
     }
   };
 
-  const fetchUserDeriv = async () => {
-    setStatus('loading')
+  const fetchUserDeriv = async (urlSearchParam?: string) => {
+    setStatus("loading");
     const derivCookie = document.cookie
       .split("; ")
       .find((row) => row.startsWith("derivData="));
@@ -53,23 +49,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (derivDataFromCookie && derivDataFromCookie.email) {
       setUserDeriv({ email: derivDataFromCookie.email });
+      setStatus("success");
       return;
     }
-    if (!urlSearch) {
+    if (!urlSearchParam && !urlSearch) {
+      setStatus("success");
       return;
     }
 
-    const params = new URLSearchParams(urlSearch);
+    const params = new URLSearchParams(urlSearchParam || urlSearch);
     const token = params.get("token1") || "";
 
     if (!token) {
+      setStatus("success");
       return;
     }
 
     const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${process.env.NEXT_PUBLIC_DERIV_APPID}`);
 
     ws.onopen = () => {
-      console.log("WebSocket conectado, enviando autorização...");
       ws.send(
         JSON.stringify({
           authorize: token,
@@ -82,29 +80,44 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const response = JSON.parse(event.data);
 
       if (response.error) {
+        setStatus("error");
       } else {
         const email = response.authorize?.email || "email não encontrado";
         setUserDeriv({ email });
         document.cookie = `derivData=${JSON.stringify({ email })}; path=/; max-age=${60 * 60 * 24}`; // 1 dia
-
         await linkDerivAccount(email);
-        setStatus('success')
+        setStatus("success");
       }
       ws.close();
     };
 
     ws.onerror = (err) => {
-      setStatus('error');
+      setStatus("error");
       ws.close();
     };
-
-    ws.onclose = () => {
-    };
   };
+
+  const authStateChange = async () => {
+    const supabase = await createClient();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        setUser(session?.user || null);
+        setStatus("success");
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+        setStatus("success");
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }
 
   useEffect(() => {
     fetchUser();
     fetchUserDeriv();
+    authStateChange();
   }, []);
 
   return (

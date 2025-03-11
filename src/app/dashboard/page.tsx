@@ -12,11 +12,18 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import { useUser } from "@/contexts/UserContext";
 import { signOutAction } from "@/services/actions/auth/supabase-actions";
 import Link from "next/link";
+import { useEffect } from "react";
 import * as S from "./styles";
 
 export default function Dashboard() {
   const { collapsed } = useSidebar();
-  const { user, userDeriv, status } = useUser();
+  const { user, userDeriv, status, fetchUser } = useUser();
+
+  useEffect(() => {
+    if (status === "error" || !user) {
+      fetchUser();
+    }
+  }, [status, user, fetchUser]);
 
   return (
     <S.Wrapper>
@@ -31,10 +38,12 @@ export default function Dashboard() {
       <Container>
         <Header name="Início" />
         {status === "loading" && <Loading message="Carregando dados" />}
+        {status === "error" && <p>Erro ao carregar os dados do usuário</p>}
+        {status === "success" && !user && <p>Nenhum usuário autenticado</p>}
         {user && (
           <Body>
             <S.Introduction>
-              <p>Olá, {user.user_metadata.name}</p>
+              <p>Olá, {user.user_metadata.name || "Usuário"}</p>
             </S.Introduction>
             {userDeriv && <p>Conta Deriv vinculada: {userDeriv.email}</p>}
             <p style={{ margin: "3rem 0" }}>Ações principais</p>
