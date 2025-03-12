@@ -2,6 +2,7 @@
 
 import Body from "@/components/Body";
 import Card from "@/components/Card";
+import { CardContainer } from "@/components/Card/styles";
 import Container from "@/components/Container";
 import Header from "@/components/Header";
 import Inicio from "@/components/icons/Inicio";
@@ -47,7 +48,7 @@ export default function Dashboard() {
             </S.Introduction>
             {userDeriv && <p>Conta Deriv vinculada: {userDeriv.email}</p>}
             <p style={{ margin: "3rem 0" }}>Ações principais</p>
-            <S.CardContainer>
+            <CardContainer>
               <Card>
                 <Link href="/dashboard/operacao">
                   <img src="operacao-img.jpg" alt="" />
@@ -60,7 +61,7 @@ export default function Dashboard() {
                   <p>Criar conta na corretora</p>
                 </Link>
               </Card>
-            </S.CardContainer>
+            </CardContainer>
           </Body>
         )}
       </Container>

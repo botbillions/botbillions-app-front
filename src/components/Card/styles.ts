@@ -2,6 +2,12 @@
 
 import styled, { css } from "styled-components";
 
+export const CardContainer = styled.div`
+  display: grid;
+  column-gap: 1rem;
+  grid-template-columns:repeat(4,1fr) ;
+`;
+
 export const Wrapper = styled.div`
   --gutter: 1.6rem;
   display: flex;
