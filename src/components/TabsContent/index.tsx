@@ -10,9 +10,17 @@ interface TabContentProps {
   selectedBot: BotsDeriv | null;
   bots: BotsDeriv[] | null;
   onSelectBot: (tabId: number, bot: BotsDeriv) => void;
+  onClearSelectedBot: (tabId: number) => void; // Nova prop para limpar o bot
 }
 
-export const TabContent = ({ tabId, activeTabId, selectedBot, bots, onSelectBot }: TabContentProps) => {
+export const TabContent = ({
+  tabId,
+  activeTabId,
+  selectedBot,
+  bots,
+  onSelectBot,
+  onClearSelectedBot,
+}: TabContentProps) => {
   if (tabId !== activeTabId) return null;
 
   if (selectedBot) {
@@ -25,6 +33,10 @@ export const TabContent = ({ tabId, activeTabId, selectedBot, bots, onSelectBot 
           {selectedBot.name}
         </h3>
         <BtnAction name="Inicie a inteligência" />
+        <BtnAction
+          name="Selecione outro Bot"
+          onclickFn={() => onClearSelectedBot(tabId)}
+        />
       </div>
     );
   }

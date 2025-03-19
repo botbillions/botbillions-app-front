@@ -14,7 +14,7 @@ interface TabsProps {
 export const Tabs = ({ tabs, activeTabId, onAddTab, onRemoveTab, children }: TabsProps) => {
   return (
     <S.TabsContainer>
-      <div className="nav nav-tabs bg-dark pt-1 px-1" style={{ borderBottom: "1px solid #484c51a3" }}>
+      <div style={{ borderBottom: "1px solid #484c51a3", marginBottom: "2rem" }}>
         {tabs.map((tab) => (
           <S.Tab
             key={tab.id}
@@ -25,7 +25,7 @@ export const Tabs = ({ tabs, activeTabId, onAddTab, onRemoveTab, children }: Tab
             {tab.id !== 1 && (
               <FaTimes
                 className="ml-2 text-danger"
-                style={{ cursor: "pointer", verticalAlign: "middle" }}
+                style={{ cursor: "pointer", verticalAlign: "middle", marginLeft: "1rem" }}
                 onClick={(e) => onRemoveTab(tab.id, e)}
               />
             )}

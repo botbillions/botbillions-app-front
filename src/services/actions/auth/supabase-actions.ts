@@ -17,6 +17,7 @@ export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
   cookiesHelper.removeAll();
+  
   return redirect("/");
 };
 

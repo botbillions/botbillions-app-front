@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import * as S from "./styles";
 
+declare const window: any;
+
 const setCookie = (name: string, value: string, days: number) => {
   let expires = "";
   if (days) {

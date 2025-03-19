@@ -23,13 +23,18 @@ const Operacao = () => {
   const { user, userDeriv } = useUser();
   const { botsDeriv } = useDeriv();
   const searchParams = useSearchParams();
-  const { tabs, selectedBots, addTab, removeTab, selectBot } = useTabs();
+  const { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot } = useTabs();
 
   const activeTabId = parseInt(searchParams.get("tab") || "1", 10);
 
   return (
     <S.Wrapper>
-      <Sidebar logout={async () => await signOutAction()}>
+      <Sidebar logout={async () => {
+        localStorage.clear();
+        localStorage.setItem("tabs", JSON.stringify([{ id: 1, title: "Aba 1" }]));
+        localStorage.setItem("selectedBots", JSON.stringify({}));
+        await signOutAction()
+      }}>
         <MenuItemST component={<Link href="/dashboard" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />}> Início </MenuItemST>
         <MenuItemST component={<Link href="/dashboard/operacao" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active> Operação </MenuItemST>
       </Sidebar>
@@ -44,11 +49,13 @@ const Operacao = () => {
                   className={`tab-pane ${activeTabId === tab.id ? "active show" : "d-none"}`}
                 >
                   <TabContent
+                    key={tab.id}
                     tabId={tab.id}
                     activeTabId={activeTabId}
                     selectedBot={selectedBots[tab.id] || null}
                     bots={botsDeriv}
                     onSelectBot={selectBot}
+                    onClearSelectedBot={clearSelectedBot}
                   />
                 </div>
               ))}

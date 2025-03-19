@@ -28,7 +28,12 @@ export default function Dashboard() {
 
   return (
     <S.Wrapper>
-      <Sidebar logout={async () => await signOutAction()}>
+      <Sidebar logout={async () => {
+        localStorage.clear();
+        localStorage.setItem("tabs", JSON.stringify([{ id: 1, title: "Aba 1" }]));
+        localStorage.setItem("selectedBots", JSON.stringify({}));
+        await signOutAction()
+      }}>
         <MenuItemST component={<Link href="/dashboard" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active>
           Início
         </MenuItemST>

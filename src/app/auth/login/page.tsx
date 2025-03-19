@@ -1,7 +1,6 @@
 "use client";
 
 import BtnAction from "@/components/BtnAction";
-import { FormMessage } from "@/components/forms/form-message";
 import { Label } from "@/components/forms/label";
 import { StyledForm, StyledInput, StyledTitle } from "@/components/forms/styles";
 import { SubmitButton } from "@/components/forms/submit-button";
@@ -76,7 +75,6 @@ export default function Login() {
             >
               Entrar
             </SubmitButton>
-            <FormMessage />
           </S.InputContainer>
         </StyledForm>
       </S.ContainerLogin>

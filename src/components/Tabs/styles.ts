@@ -13,7 +13,7 @@ export const Tab = styled(Link)`
     color: ${theme.colors.white};
     font-size: ${theme.font.sizes.regular};
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 1rem;
     cursor: pointer;
     &:hover {
       background-color: ${theme.colors.primary[800]};

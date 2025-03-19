@@ -7,6 +7,7 @@
     "dev:https": "npx next dev --port 443 --hostname meuapp.local --experimental-https --experimental-https-key ../../../certificates/localhost.key --experimental-https-cert ../../../certificates/com.crt",
     "build": "next build",
     "start": "next start",
+    "start:https": "node server.js",
     "lint": "next lint"
   },
   "dependencies": {

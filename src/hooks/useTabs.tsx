@@ -53,5 +53,13 @@ export const useTabs = () => {
     }));
   };
 
-  return { tabs, selectedBots, addTab, removeTab, selectBot };
+  const clearSelectedBot = (tabId: number) => {
+    setSelectedBots((prev) => {
+      const newSelected = { ...prev };
+      delete newSelected[tabId]; // Remove o bot selecionado apenas dessa aba
+      return newSelected;
+    });
+  };
+
+  return { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot };
 };

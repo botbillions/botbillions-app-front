@@ -1,4 +1,3 @@
-// /app/admin/page.tsx
 "use client";
 
 import Body from "@/components/Body";
