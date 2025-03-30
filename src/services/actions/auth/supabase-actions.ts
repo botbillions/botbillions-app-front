@@ -1,6 +1,6 @@
 "use server";
 
-import { type FormDataProps } from "@/utils/";
+import { type FormDataProps } from "@/models/form";
 import { cookiesHelper } from "@/utils/cookies";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";

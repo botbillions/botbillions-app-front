@@ -56,6 +56,7 @@ const Operacao = () => {
                     bots={botsDeriv}
                     onSelectBot={selectBot}
                     onClearSelectedBot={clearSelectedBot}
+                    userDeriv={userDeriv}
                   />
                 </div>
               ))}

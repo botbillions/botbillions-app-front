@@ -1,7 +1,7 @@
 "use client";
 
+import { BotsDeriv } from "@/models/deriv";
 import { getBotList } from "@/services/actions/bot/supabase-actions";
-import { BotsDeriv } from "@/utils/deriv";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type DerivContextType = {

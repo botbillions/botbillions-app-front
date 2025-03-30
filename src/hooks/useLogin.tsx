@@ -1,6 +1,7 @@
 "use client";
 
-import { createNewFormSchema, type CreateNewFormData } from "@/utils";
+import { CreateNewFormData } from "@/models/form";
+import { createNewFormSchema } from "@/utils/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";

@@ -2,6 +2,8 @@
 
 export interface UserDeriv {
   email: string;
+  balance: string;
+  loginid: string
 }
 
 export interface BotsDeriv{

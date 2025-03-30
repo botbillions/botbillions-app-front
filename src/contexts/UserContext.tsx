@@ -8,6 +8,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 type UserDeriv = {
   email: string;
+  balance: string;
+  loginid: string;
 };
 
 type UserContextType = {
@@ -42,16 +44,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserDeriv = async (urlSearchParam?: string) => {
     setStatus("loading");
+
+    // Lê o cookie
     const derivCookie = document.cookie
       .split("; ")
       .find((row) => row.startsWith("derivData="));
     const derivDataFromCookie = derivCookie ? JSON.parse(derivCookie.split("=")[1]) : null;
 
     if (derivDataFromCookie && derivDataFromCookie.email) {
-      setUserDeriv({ email: derivDataFromCookie.email });
+      setUserDeriv({
+        email: derivDataFromCookie.email,
+        balance: derivDataFromCookie.balance,
+        loginid: derivDataFromCookie.loginid // Consistente com o cookie
+      });
       setStatus("success");
       return;
     }
+
     if (!urlSearchParam && !urlSearch) {
       setStatus("success");
       return;
@@ -78,16 +87,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     ws.onmessage = async (event) => {
       const response = JSON.parse(event.data);
+      console.log("Resposta completa da API:", response);
 
       if (response.error) {
         setStatus("error");
-      } else {
-        const email = response.authorize?.email || "email não encontrado";
-        setUserDeriv({ email });
-        document.cookie = `derivData=${JSON.stringify({ email })}; path=/; max-age=${60 * 60 * 24}`; // 1 dia
-        await linkDerivAccount(email);
-        setStatus("success");
+        ws.close();
+        return;
       }
+
+      const email = response.authorize?.email || "email não encontrado";
+      const balance = response.authorize?.balance?.toString() || "balance não encontrado";
+      const loginid = response.authorize?.loginid || "loginid não encontrado";
+
+      const derivData = { email, balance, loginid };
+      setUserDeriv(derivData);
+      document.cookie = `derivData=${JSON.stringify(derivData)}; path=/; max-age=${60 * 60 * 24}`;
+      await linkDerivAccount(email);
+      setStatus("success");
       ws.close();
     };
 

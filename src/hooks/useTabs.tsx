@@ -1,4 +1,4 @@
-import { BotsDeriv } from "@/utils/deriv";
+import { BotsDeriv } from "@/models/deriv";
 import { useEffect, useState } from "react";
 
 type Tab = { id: number; title: string };
