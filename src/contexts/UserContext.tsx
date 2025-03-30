@@ -1,11 +1,8 @@
 "use client";
 
-import type { UserDeriv } from "@/models/deriv";
-import { linkDerivAccount, userAuthenticated } from "@/services/actions/auth/supabase-actions";
-import { addUserData } from "@/hooks/usesDeriv";
+import { userAuthenticated } from "@/services/actions/auth/supabase-actions";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { useSearchParams } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type UserContextType = {
