@@ -15,16 +15,12 @@ import { signOutAction } from "@/services/actions/auth/supabase-actions";
 import Link from "next/link";
 import { useEffect } from "react";
 import * as S from "./styles";
+import { useDeriv } from "@/contexts/DerivContext";
 
 export default function Dashboard() {
   const { collapsed } = useSidebar();
-  const { user, userDeriv, status, fetchUser } = useUser();
-
-  useEffect(() => {
-    if (status === "error" || !user) {
-      fetchUser();
-    }
-  }, [status, user, fetchUser]);
+  const { user, status } = useUser();
+  const { userDeriv } = useDeriv();
 
   return (
     <S.Wrapper>

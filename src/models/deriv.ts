@@ -3,7 +3,9 @@
 export interface UserDeriv {
   email: string;
   balance: string;
-  loginid: string
+  loginid: string;
+  account_type: "Virtual" | "Real";
+  currency: string
 }
 
 export interface BotsDeriv{

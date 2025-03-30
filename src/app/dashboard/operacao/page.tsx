@@ -20,8 +20,8 @@ import * as S from "./styles";
 
 const Operacao = () => {
   const { collapsed } = useSidebar();
-  const { user, userDeriv } = useUser();
-  const { botsDeriv } = useDeriv();
+  const { user } = useUser();
+  const { botsDeriv, userDeriv } = useDeriv();
   const searchParams = useSearchParams();
   const { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot } = useTabs();
 

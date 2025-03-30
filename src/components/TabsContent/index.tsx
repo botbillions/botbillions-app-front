@@ -29,6 +29,7 @@ export const TabContent = ({
         onClearSelectedBot={onClearSelectedBot}
         selectedBot={selectedBot}
         tabId={tabId}
+        userDeriv={userDeriv}
       />
     );
   }
