@@ -1,7 +1,6 @@
 "use client";
 
 import { userAuthenticated } from "@/services/actions/auth/supabase-actions";
-import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -20,36 +19,20 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUser = async () => {
     setStatus("loading");
-    try {
-      const authenticatedUser = await userAuthenticated();
+    const authenticatedUser = await userAuthenticated();
+
+    if (authenticatedUser) {
       setUser(authenticatedUser);
-      setStatus(authenticatedUser ? "success" : "error");
-    } catch (err) {
+      setStatus("success");
+    } else {
       setUser(null);
       setStatus("error");
     }
+
   };
-
-  const authStateChange = async () => {
-    const supabase = await createClient();
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        setUser(session?.user || null);
-        setStatus("success");
-      } else if (event === "SIGNED_OUT") {
-        setUser(null);
-        setStatus("success");
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }
 
   useEffect(() => {
     fetchUser();
-    authStateChange();
   }, []);
 
   return (
