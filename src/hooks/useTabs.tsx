@@ -61,5 +61,35 @@ export const useTabs = () => {
     });
   };
 
-  return { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot };
+  const startSelectedBot = (bot: BotsDeriv) => {
+    console.log(bot);
+    const welcomeMessage = bot.config.welcome_message;
+    const prompts = bot.config.prompts;
+
+    if (welcomeMessage) {
+      window.alert(welcomeMessage);
+    }
+
+    for (let index = 0; index < prompts.length; index++) {
+      const element = prompts[index];
+      let prompt = null;
+
+      // Loop até que a entrada seja válida (não vazia) ou o usuário cancele
+      while (prompt === null || prompt.trim() === "") {
+        prompt = window.prompt(element.text);
+        if (prompt === null) {
+          console.log("Usuário cancelou o prompt.");
+          break; // Sai do loop interno se o usuário clicar em "Cancelar"
+        }
+        if (prompt.trim() === "") {
+          window.alert("Por favor, insira um valor válido.");
+        }
+      }
+
+      if (prompt !== null) {
+        console.log(prompt);
+      }
+    }
+  };
+  return { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot, startSelectedBot };
 };

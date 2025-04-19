@@ -8,9 +8,11 @@ interface ISelectedBotProps {
   userDeriv: UserDeriv | null;
   selectedBot: BotsDeriv;
   onClearSelectedBot: (tabId: number) => void;
+  startSelectedBot: (bot: BotsDeriv) => void;
+  bot: BotsDeriv;
   tabId: number;
 }
-const SelectedBot = ({ onClearSelectedBot, selectedBot, tabId , userDeriv}: ISelectedBotProps) => {
+const SelectedBot = ({ onClearSelectedBot, startSelectedBot, bot, selectedBot, tabId, userDeriv }: ISelectedBotProps) => {
   return (
     <S.OperacaoContainer>
       <S.HeaderAccount>
@@ -32,7 +34,10 @@ const SelectedBot = ({ onClearSelectedBot, selectedBot, tabId , userDeriv}: ISel
         <hr />
       </S.OperacaoTitle>
       <S.BtnContainer>
-        <BtnAction name="Inicie a inteligência" />
+        <BtnAction
+          name="Inicie a inteligência"
+          onclickFn={() => startSelectedBot(bot)}
+        />
         <BtnAction
           name="Selecione outro Bot"
           onclickFn={() => onClearSelectedBot(tabId)}
