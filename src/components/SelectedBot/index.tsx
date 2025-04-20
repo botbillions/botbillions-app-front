@@ -1,3 +1,4 @@
+import { useTabs } from '@/hooks/useTabs';
 import { BotsDeriv, type UserDeriv } from '@/models/deriv';
 import BtnAction from '../BtnAction';
 import Robot from '../icons/Robot';
@@ -8,11 +9,11 @@ interface ISelectedBotProps {
   userDeriv: UserDeriv | null;
   selectedBot: BotsDeriv;
   onClearSelectedBot: (tabId: number) => void;
-  startSelectedBot: (bot: BotsDeriv) => void;
   bot: BotsDeriv;
   tabId: number;
 }
-const SelectedBot = ({ onClearSelectedBot, startSelectedBot, bot, selectedBot, tabId, userDeriv }: ISelectedBotProps) => {
+const SelectedBot = ({ onClearSelectedBot, bot, selectedBot, tabId, userDeriv }: ISelectedBotProps) => {
+  const { startSelectedBot } = useTabs();
   return (
     <S.OperacaoContainer>
       <S.HeaderAccount>

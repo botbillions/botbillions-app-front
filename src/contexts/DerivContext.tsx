@@ -1,10 +1,10 @@
 "use client";
 
-import { BotsDeriv, UserDeriv } from "@/models/deriv";
 import { usesDeriv } from "@/hooks/usesDeriv";
+import { BotsDeriv, ConfigBotsDeriv, UserDeriv } from "@/models/deriv";
 import { getBotList } from "@/services/actions/bot/supabase-actions";
-import { createContext, useContext, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { createContext, useContext, useEffect, useState } from "react";
 
 type Status = "error" | "success" | "loading";
 
@@ -14,20 +14,60 @@ type DerivContextType = {
   status: Status;
   fetchBotsDeriv: () => Promise<void>;
   fetchUserDeriv: (token?: string) => Promise<void>;
+  ws: WebSocket | null;
+  startOperation: (configOperation: ConfigBotsDeriv) => Promise<void>;
 };
 
 const DerivContext = createContext<DerivContextType | undefined>(undefined);
 
 export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
-  const urlSearch = searchParams.toString();
-  const params = new URLSearchParams(urlSearch);
-  const token = params.get("token1") || "";
+  const token = searchParams.get("token1") || "";
 
   const [botsDeriv, setBotsDeriv] = useState<BotsDeriv[] | null>(null);
   const [userDeriv, setUserDeriv] = useState<UserDeriv | null>(null);
   const [status, setStatus] = useState<Status>("loading");
-  const { addUserData } = usesDeriv({setStatus,setUserDeriv,token});
+  const [ws, setWs] = useState<WebSocket | null>(null);
+
+  // Inicializar WebSocket com reconexão
+  useEffect(() => {
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+
+    const connect = () => {
+      const newWs = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${process.env.NEXT_PUBLIC_DERIV_APPID}`);
+      setWs(newWs);
+
+      newWs.onopen = () => {
+        console.log("WebSocket aberto");
+        reconnectAttempts = 0;
+      };
+
+      newWs.onclose = () => {
+        if (reconnectAttempts < maxReconnectAttempts) {
+          setTimeout(() => {
+            reconnectAttempts++;
+            console.log(`Tentativa de reconexão ${reconnectAttempts}/${maxReconnectAttempts}`);
+            connect();
+          }, Math.pow(2, reconnectAttempts) * 1000);
+        } else {
+          console.error("Máximo de tentativas de reconexão atingido");
+          setStatus("error");
+        }
+      };
+
+      newWs.onerror = (error) => {
+        console.error("Erro no WebSocket:", error);
+      };
+    };
+
+    connect();
+    return () => {
+      ws?.close();
+    };
+  }, []);
+
+  const { addUserData, startOperation } = usesDeriv({ setStatus, setUserDeriv, token: userDeriv?.token || token });
 
   const fetchBotsDeriv = async () => {
     try {
@@ -39,8 +79,9 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const fetchUserDeriv = async (urlSearchParam?: string) => {
+  const fetchUserDeriv = async (urlToken?: string) => {
     setStatus("loading");
+    console.log("fetchUserDeriv - Token recebido:", urlToken || token);
 
     const derivCookie = document.cookie
       .split("; ")
@@ -48,22 +89,21 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
     const derivDataFromCookie = derivCookie ? JSON.parse(derivCookie.split("=")[1]) : null;
 
     if (derivDataFromCookie && derivDataFromCookie.email) {
+      console.log("fetchUserDeriv - Carregando userDeriv de cookies:", derivDataFromCookie);
       setUserDeriv({
         email: derivDataFromCookie.email,
         balance: derivDataFromCookie.balance,
         loginid: derivDataFromCookie.loginid,
-        account_type: derivDataFromCookie.account_type, // Já vem como "virtual" ou "real"
+        account_type: derivDataFromCookie.account_type,
         currency: derivDataFromCookie.currency,
+        token: derivDataFromCookie.token || urlToken || token,
       });
       setStatus("success");
       return;
     }
-    if (!urlSearchParam && !urlSearch) {
-      setStatus("success");
-      return;
-    }
 
-    if (!token) {
+    if (!urlToken && !token) {
+      console.log("fetchUserDeriv - Nenhum token disponível");
       setStatus("success");
       return;
     }
@@ -73,13 +113,13 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     fetchBotsDeriv();
-    if(!userDeriv){
-      fetchUserDeriv(); 
+    if (!userDeriv && token) {
+      fetchUserDeriv(token);
     }
-  }, [userDeriv]);
+  }, [userDeriv, token]);
 
   return (
-    <DerivContext.Provider value={{ botsDeriv, userDeriv, status, fetchBotsDeriv, fetchUserDeriv }}>
+    <DerivContext.Provider value={{ botsDeriv, userDeriv, status, fetchBotsDeriv, fetchUserDeriv, ws, startOperation }}>
       {children}
     </DerivContext.Provider>
   );

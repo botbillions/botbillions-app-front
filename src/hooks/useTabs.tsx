@@ -1,9 +1,11 @@
+import { useDeriv } from "@/contexts/DerivContext";
 import { BotsDeriv } from "@/models/deriv";
 import { useEffect, useState } from "react";
 
 type Tab = { id: number; title: string };
 
 export const useTabs = () => {
+  const { startOperation } = useDeriv();
   const [tabs, setTabs] = useState<Tab[]>(() => {
     if (typeof window !== "undefined") {
       const savedTabs = localStorage.getItem("tabs");
@@ -61,15 +63,16 @@ export const useTabs = () => {
     });
   };
 
-  const startSelectedBot = (bot: BotsDeriv) => {
+  const startSelectedBot = async (bot: BotsDeriv) => {
     console.log(bot);
     const welcomeMessage = bot.config.welcome_message;
     const prompts = bot.config.prompts;
 
     if (welcomeMessage) {
-      window.alert(welcomeMessage);
+      window.alert(welcomeMessage); // Exibe a mensagem de boas-vindas uma vez
     }
 
+    // Coleta os valores dos prompts
     for (let index = 0; index < prompts.length; index++) {
       const element = prompts[index];
       let prompt = null;
@@ -79,17 +82,19 @@ export const useTabs = () => {
         prompt = window.prompt(element.text);
         if (prompt === null) {
           console.log("Usuário cancelou o prompt.");
-          break; // Sai do loop interno se o usuário clicar em "Cancelar"
+          return; // Sai da função se o usuário cancelar
         }
         if (prompt.trim() === "") {
           window.alert("Por favor, insira um valor válido.");
         }
       }
 
-      if (prompt !== null) {
-        console.log(prompt);
-      }
+      element.value = prompt; // Atualiza o valor do prompt
+      console.log(`Prompt ${element.text}: ${prompt}`);
     }
+
+    // Chama startOperation uma única vez com a configuração atualizada
+    await startOperation(bot.config);
   };
   return { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot, startSelectedBot };
 };

@@ -9,7 +9,6 @@ interface TabContentProps {
   bots: BotsDeriv[] | null;
   onSelectBot: (tabId: number, bot: BotsDeriv) => void;
   onClearSelectedBot: (tabId: number) => void;
-  startSelectedBot: (bot: BotsDeriv) => void;
   userDeriv: UserDeriv | null;
 }
 
@@ -20,7 +19,6 @@ export const TabContent = ({
   bots,
   onSelectBot,
   onClearSelectedBot,
-  startSelectedBot,
   userDeriv
 }: TabContentProps) => {
   if (tabId !== activeTabId) return null;
@@ -29,7 +27,6 @@ export const TabContent = ({
     return (
       <SelectedBot
         onClearSelectedBot={onClearSelectedBot}
-        startSelectedBot={startSelectedBot}
         selectedBot={selectedBot}
         tabId={tabId}
         bot={selectedBot}

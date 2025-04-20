@@ -23,7 +23,7 @@ const Operacao = () => {
   const { user } = useUser();
   const { botsDeriv, userDeriv } = useDeriv();
   const searchParams = useSearchParams();
-  const { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot, startSelectedBot } = useTabs();
+  const { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot } = useTabs();
 
   const activeTabId = parseInt(searchParams.get("tab") || "1", 10);
 
@@ -56,7 +56,6 @@ const Operacao = () => {
                     bots={botsDeriv}
                     onSelectBot={selectBot}
                     onClearSelectedBot={clearSelectedBot}
-                    startSelectedBot={startSelectedBot}
                     userDeriv={userDeriv}
                   />
                 </div>
