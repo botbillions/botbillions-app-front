@@ -50,3 +50,10 @@ export const Tab = styled(Link)`
     }
   `}
 `;
+
+export const StatusMessage = styled.p`
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - 7.2rem);
+`;

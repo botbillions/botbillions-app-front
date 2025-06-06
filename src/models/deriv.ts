@@ -33,3 +33,21 @@ type prompt = {
   text: string;
   value?: string;
 }
+
+export interface Operation {
+  id: string;
+  type: 'buy' | 'sell';
+  symbol: string;
+  amount: number;
+  price: number;
+  timestamp: string;
+  status: 'pending' | 'completed' | 'failed';
+  profit?: number;
+}
+
+export interface OperationState {
+  isRunning: boolean;
+  operations: Operation[];
+  totalProfit: number;
+  winRate: number;
+}

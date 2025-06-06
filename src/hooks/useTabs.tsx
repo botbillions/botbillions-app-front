@@ -1,5 +1,6 @@
+// useTabs.tsx
 import { useDeriv } from "@/contexts/DerivContext";
-import { BotsDeriv } from "@/models/deriv";
+import { BotsDeriv, OperationState } from "@/models/deriv";
 import { useEffect, useState } from "react";
 
 type Tab = { id: number; title: string };
@@ -22,10 +23,20 @@ export const useTabs = () => {
     return {};
   });
 
+  // Novo estado para rastrear operationState por tabId
+  const [operationsByTab, setOperationsByTab] = useState<{ [tabId: number]: OperationState }>(() => {
+    if (typeof window !== "undefined") {
+      const savedOperations = localStorage.getItem("operationsByTab");
+      return savedOperations ? JSON.parse(savedOperations) : {};
+    }
+    return {};
+  });
+
   useEffect(() => {
     localStorage.setItem("tabs", JSON.stringify(tabs));
     localStorage.setItem("selectedBots", JSON.stringify(selectedBots));
-  }, [tabs, selectedBots]);
+    localStorage.setItem("operationsByTab", JSON.stringify(operationsByTab));
+  }, [tabs, selectedBots, operationsByTab]);
 
   const addTab = () => {
     const newTabId = tabs.length + 1;
@@ -33,8 +44,13 @@ export const useTabs = () => {
     setTabs((prev) => [...prev, newTab]);
     setSelectedBots((prev) => {
       const newSelected = { ...prev };
-      delete newSelected[newTabId]; // Garante que a nova aba comece sem bot
+      delete newSelected[newTabId];
       return newSelected;
+    });
+    setOperationsByTab((prev) => {
+      const newOperations = { ...prev };
+      delete newOperations[newTabId];
+      return newOperations;
     });
   };
 
@@ -45,6 +61,11 @@ export const useTabs = () => {
       const newSelected = { ...prev };
       delete newSelected[tabId];
       return newSelected;
+    });
+    setOperationsByTab((prev) => {
+      const newOperations = { ...prev };
+      delete newOperations[tabId];
+      return newOperations;
     });
   };
 
@@ -58,43 +79,56 @@ export const useTabs = () => {
   const clearSelectedBot = (tabId: number) => {
     setSelectedBots((prev) => {
       const newSelected = { ...prev };
-      delete newSelected[tabId]; // Remove o bot selecionado apenas dessa aba
+      delete newSelected[tabId];
       return newSelected;
+    });
+    setOperationsByTab((prev) => {
+      const newOperations = { ...prev };
+      delete newOperations[tabId];
+      return newOperations;
     });
   };
 
-  const startSelectedBot = async (bot: BotsDeriv) => {
+  const startSelectedBot = async (bot: BotsDeriv, tabId: number) => {
     console.log(bot);
     const welcomeMessage = bot.config.welcome_message;
     const prompts = bot.config.prompts;
 
     if (welcomeMessage) {
-      window.alert(welcomeMessage); // Exibe a mensagem de boas-vindas uma vez
+      window.alert(welcomeMessage);
     }
 
-    // Coleta os valores dos prompts
     for (let index = 0; index < prompts.length; index++) {
       const element = prompts[index];
       let prompt = null;
 
-      // Loop até que a entrada seja válida (não vazia) ou o usuário cancele
       while (prompt === null || prompt.trim() === "") {
         prompt = window.prompt(element.text);
         if (prompt === null) {
           console.log("Usuário cancelou o prompt.");
-          return; // Sai da função se o usuário cancelar
+          return;
         }
         if (prompt.trim() === "") {
           window.alert("Por favor, insira um valor válido.");
         }
       }
 
-      element.value = prompt; // Atualiza o valor do prompt
+      element.value = prompt;
       console.log(`Prompt ${element.text}: ${prompt}`);
     }
 
-    // Chama startOperation uma única vez com a configuração atualizada
-    await startOperation(bot.config);
+    setOperationsByTab((prev) => ({
+      ...prev,
+      [tabId]: {
+        isRunning: true,
+        operations: [],
+        totalProfit: 0,
+        winRate: 0,
+      },
+    }));
+
+    await startOperation(bot.config, tabId);
   };
-  return { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot, startSelectedBot };
+
+  return { tabs, selectedBots, operationsByTab, addTab, removeTab, selectBot, clearSelectedBot, startSelectedBot };
 };

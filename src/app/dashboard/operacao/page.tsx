@@ -21,7 +21,7 @@ import * as S from "./styles";
 const Operacao = () => {
   const { collapsed } = useSidebar();
   const { user } = useUser();
-  const { botsDeriv, userDeriv } = useDeriv();
+  const { botsDeriv, userDeriv, status } = useDeriv();
   const searchParams = useSearchParams();
   const { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot } = useTabs();
 
@@ -29,19 +29,36 @@ const Operacao = () => {
 
   return (
     <S.Wrapper>
-      <Sidebar logout={async () => {
-        localStorage.clear();
-        localStorage.setItem("tabs", JSON.stringify([{ id: 1, title: "Aba 1" }]));
-        localStorage.setItem("selectedBots", JSON.stringify({}));
-        await signOutAction()
-      }}>
-        <MenuItemST component={<Link href="/dashboard" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />}> Início </MenuItemST>
-        <MenuItemST component={<Link href="/dashboard/operacao" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active> Operação </MenuItemST>
+      <Sidebar
+        logout={async () => {
+          localStorage.clear();
+          localStorage.setItem("tabs", JSON.stringify([{ id: 1, title: "Aba 1" }]));
+          localStorage.setItem("selectedBots", JSON.stringify({}));
+          await signOutAction();
+        }}
+      >
+        <MenuItemST
+          component={<Link href="/dashboard" />}
+          collapsed={collapsed ? "collapsed" : undefined}
+          icon={<Inicio />}
+        >
+          Início
+        </MenuItemST>
+        <MenuItemST
+          component={<Link href="/dashboard/operacao" />}
+          collapsed={collapsed ? "collapsed" : undefined}
+          icon={<Inicio />}
+          active
+        >
+          Operação
+        </MenuItemST>
       </Sidebar>
       <Container>
         <Header name="Operação" />
         <Body>
-          {user && userDeriv && botsDeriv ? (
+          {status === "loading" ? (
+            <S.StatusMessage>Carregando...</S.StatusMessage>
+          ) : user && userDeriv && botsDeriv ? (
             <Tabs tabs={tabs} activeTabId={activeTabId} onAddTab={addTab} onRemoveTab={removeTab}>
               {tabs.map((tab) => (
                 <div
@@ -69,7 +86,8 @@ const Operacao = () => {
                 <BtnAction name="Criar conta" link={process.env.NEXT_PUBLIC_DERIV_CREATE} />
               </div>
               <p style={{ maxWidth: "35rem", textAlign: "center" }}>
-                * Observação: Se esta for sua primeira conexão, verifique a opção "autorizar" quando a corretora exibir opções de permissão.
+                * Observação: Se esta for sua primeira conexão, verifique a opção "autorizar" quando a
+                corretora exibir opções de permissão.
               </p>
             </S.Conect>
           )}
