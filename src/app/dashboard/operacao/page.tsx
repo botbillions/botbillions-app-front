@@ -3,6 +3,7 @@
 import Body from "@/components/Body";
 import BtnAction from "@/components/BtnAction";
 import Container from "@/components/Container";
+import Loading from "@/components/Loading";
 import Header from "@/components/Header";
 import Inicio from "@/components/icons/Inicio";
 import Sidebar from "@/components/Sidebar";
@@ -57,7 +58,7 @@ const Operacao = () => {
         <Header name="Operação" />
         <Body>
           {status === "loading" ? (
-            <S.StatusMessage>Carregando...</S.StatusMessage>
+            <Loading message="Carregando dados" />
           ) : user && userDeriv && botsDeriv ? (
             <Tabs tabs={tabs} activeTabId={activeTabId} onAddTab={addTab} onRemoveTab={removeTab}>
               {tabs?.map((tab) => (
