@@ -1,4 +1,3 @@
-// hooks/useOperations.tsx
 import { useState, useEffect, useCallback } from 'react';
 import { BotsDeriv, ConfigBotsDeriv, Operation, OperationState } from '@/models/deriv';
 import { useDeriv } from '@/contexts/DerivContext';

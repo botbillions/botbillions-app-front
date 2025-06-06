@@ -60,7 +60,7 @@ const Operacao = () => {
             <S.StatusMessage>Carregando...</S.StatusMessage>
           ) : user && userDeriv && botsDeriv ? (
             <Tabs tabs={tabs} activeTabId={activeTabId} onAddTab={addTab} onRemoveTab={removeTab}>
-              {tabs.map((tab) => (
+              {tabs?.map((tab) => (
                 <div
                   key={tab.id}
                   className={`tab-pane ${activeTabId === tab.id ? "active show" : "d-none"}`}
