@@ -16,7 +16,6 @@ type DerivContextType = {
   fetchUserDeriv: (token?: string) => Promise<void>;
   ws: WebSocket | null;
   startOperation: (configOperation: ConfigBotsDeriv, tabId: number) => Promise<void>;
-  // Função para atualizar o saldo adicionada ao tipo do contexto
   updateUserBalance: (newBalance: number) => void;
 };
 
@@ -52,8 +51,6 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
     return null;
   };
 
-
-  // Inicializar WebSocket com reconexão
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -63,6 +60,8 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
       setStatus("success");
     }
 
+    // WebSocket global desativado para evitar conflitos com DerivApiService
+    /*
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
 
@@ -97,6 +96,7 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       ws?.close();
     };
+    */
   }, []);
 
   const { addUserData, startOperation } = usesDeriv({ setStatus, setUserDeriv, token: userDeriv?.token || token });
@@ -144,21 +144,14 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
     await addUserData();
   };
 
-  // *** A NOVA FUNÇÃO ***
-  // Função para atualizar o saldo do usuário no estado global.
   const updateUserBalance = useCallback((newBalance: number) => {
     setUserDeriv(currentUser => {
       if (!currentUser) return null;
-      // Cria um novo objeto para evitar mutação direta do estado
       const updatedUser = { ...currentUser, balance: newBalance.toString() };
-
-      // Atualiza o cookie também para manter a persistência
       document.cookie = `derivData=${JSON.stringify(updatedUser)}; path=/; max-age=86400;`;
-
       return updatedUser;
     });
   }, []);
-
 
   useEffect(() => {
     fetchBotsDeriv();
@@ -168,7 +161,6 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
   }, [userDeriv, token]);
 
   return (
-    // Adiciona a função ao valor do provider
     <DerivContext.Provider value={{ botsDeriv, userDeriv, status, fetchBotsDeriv, fetchUserDeriv, ws, startOperation, updateUserBalance }}>
       {children}
     </DerivContext.Provider>

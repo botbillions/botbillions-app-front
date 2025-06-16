@@ -3,13 +3,15 @@ export class DerivApiService {
   private token: string;
   private onMessageCallback: (data: any) => void;
   private onErrorCallback: (error: Event) => void;
-  private onAuthenticatedCallback: () => void; // Renomeado de onOpen para mais clareza
+  private onAuthenticatedCallback: () => void;
   private reqId = 1;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
 
   constructor(
     token: string,
     onMessage: (data: any) => void,
-    onAuthenticated: () => void, // Callback para quando a API estiver autenticada
+    onAuthenticated: () => void,
     onError: (error: Event) => void
   ) {
     this.token = token;
@@ -18,9 +20,6 @@ export class DerivApiService {
     this.onErrorCallback = onError;
   }
 
-  /**
-   * Inicia a conexão WebSocket e se autentica.
-   */
   public connect() {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       console.warn("DerivApiService: WebSocket já está conectado.");
@@ -32,32 +31,22 @@ export class DerivApiService {
 
     this.ws.onopen = () => {
       console.log("DerivApiService: Conexão WebSocket aberta. Autenticando...");
-      // Envia a mensagem de autorização assim que a conexão abre.
+      this.reconnectAttempts = 0;
       this.sendMessage({ authorize: this.token });
     };
 
     this.ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-
-      // Tratamento específico da resposta de autorização.
-      // Este é o portão de entrada. Só depois daqui o bot pode operar.
       if (data.msg_type === 'authorize') {
         if (data.error) {
           console.error("DerivApiService: Falha na autenticação.", data.error);
-          // Notifica o hook sobre o erro de autenticação para que ele possa parar.
           this.onErrorCallback(new ErrorEvent('AuthenticationError', { message: data.error.message }));
         } else {
           console.log("DerivApiService: Autenticado com sucesso.");
-          // A MUDANÇA PRINCIPAL: Chama o callback de autenticação SÓ UMA VEZ, AQUI.
-          // Isso sinaliza ao hook que ele pode começar a enviar os pedidos de ticks.
           this.onAuthenticatedCallback();
         }
-        // Não encaminha a mensagem 'authorize' para o callback geral para evitar lógica duplicada.
-        // O hook não precisa saber sobre a mensagem de autorização, só precisa saber se FOI autorizado.
         return;
       }
-      
-      // Encaminha todas as outras mensagens (ticks, proposals, etc.) para o hook que a instanciou.
       this.onMessageCallback(data);
     };
 
@@ -66,19 +55,23 @@ export class DerivApiService {
       this.onErrorCallback(error);
     };
 
-    this.ws.onclose = () => {
-      console.log("DerivApiService: Conexão fechada.");
-      // Opcional: Você pode querer um callback para onclose também.
+    this.ws.onclose = (event) => {
+      console.log("DerivApiService: Conexão fechada. Motivo:", event);
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        setTimeout(() => {
+          this.reconnectAttempts++;
+          console.log(`DerivApiService: Tentativa de reconexão ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+          this.connect();
+        }, Math.pow(2, this.reconnectAttempts) * 1000);
+      } else {
+        console.error("DerivApiService: Máximo de tentativas de reconexão atingido");
+        this.onErrorCallback(new ErrorEvent('MaxReconnectAttempts', { message: 'Máximo de tentativas de reconexão atingido' }));
+      }
     };
   }
 
-  /**
-   * Envia uma mensagem para o WebSocket, adicionando um req_id.
-   * @param message O objeto da mensagem a ser enviada.
-   */
   public sendMessage(message: Record<string, any>) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      // Adiciona req_id se não for uma subscrição que não precisa dele (como 'authorize')
       const messageWithReqId = message.subscribe ? message : { ...message, req_id: this.reqId++ };
       this.ws.send(JSON.stringify(messageWithReqId));
     } else {
@@ -86,20 +79,13 @@ export class DerivApiService {
     }
   }
 
-  /**
-   * Fecha a conexão WebSocket.
-   */
   public disconnect() {
     if (this.ws) {
-      // Idealmente, você deveria cancelar todas as subscrições (com 'forget') antes de fechar.
       this.ws.close();
       this.ws = null;
     }
   }
 
-  /**
-   * Verifica se a conexão está aberta e pronta.
-   */
   public isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
   }

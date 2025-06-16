@@ -80,6 +80,9 @@ export const StatusContainer = styled.div`
   & p{
     color: #000;
   }
+  & h4{
+    color: #000;
+  }
 `;
 
 export const StatusHeader = styled.div`
