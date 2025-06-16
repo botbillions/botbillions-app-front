@@ -4,7 +4,7 @@ import { usesDeriv } from "@/hooks/usesDeriv";
 import { BotsDeriv, ConfigBotsDeriv, UserDeriv } from "@/models/deriv";
 import { getBotList } from "@/services/actions/bot/supabase-actions";
 import { useSearchParams } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 type Status = "error" | "success" | "loading";
 
@@ -16,6 +16,8 @@ type DerivContextType = {
   fetchUserDeriv: (token?: string) => Promise<void>;
   ws: WebSocket | null;
   startOperation: (configOperation: ConfigBotsDeriv, tabId: number) => Promise<void>;
+  // Função para atualizar o saldo adicionada ao tipo do contexto
+  updateUserBalance: (newBalance: number) => void;
 };
 
 const DerivContext = createContext<DerivContextType | undefined>(undefined);
@@ -28,7 +30,7 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
   const [userDeriv, setUserDeriv] = useState<UserDeriv | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [ws, setWs] = useState<WebSocket | null>(null);
-  
+
   const getUserDerivFromCookie = (): UserDeriv | null => {
     if (typeof window === "undefined") return null;
     const derivCookie = document.cookie
@@ -96,6 +98,7 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
       ws?.close();
     };
   }, []);
+
   const { addUserData, startOperation } = usesDeriv({ setStatus, setUserDeriv, token: userDeriv?.token || token });
 
   const fetchBotsDeriv = async () => {
@@ -141,6 +144,22 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
     await addUserData();
   };
 
+  // *** A NOVA FUNÇÃO ***
+  // Função para atualizar o saldo do usuário no estado global.
+  const updateUserBalance = useCallback((newBalance: number) => {
+    setUserDeriv(currentUser => {
+      if (!currentUser) return null;
+      // Cria um novo objeto para evitar mutação direta do estado
+      const updatedUser = { ...currentUser, balance: newBalance.toString() };
+
+      // Atualiza o cookie também para manter a persistência
+      document.cookie = `derivData=${JSON.stringify(updatedUser)}; path=/; max-age=86400;`;
+
+      return updatedUser;
+    });
+  }, []);
+
+
   useEffect(() => {
     fetchBotsDeriv();
     if (!userDeriv && token) {
@@ -149,7 +168,8 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
   }, [userDeriv, token]);
 
   return (
-    <DerivContext.Provider value={{ botsDeriv, userDeriv, status, fetchBotsDeriv, fetchUserDeriv, ws, startOperation }}>
+    // Adiciona a função ao valor do provider
+    <DerivContext.Provider value={{ botsDeriv, userDeriv, status, fetchBotsDeriv, fetchUserDeriv, ws, startOperation, updateUserBalance }}>
       {children}
     </DerivContext.Provider>
   );

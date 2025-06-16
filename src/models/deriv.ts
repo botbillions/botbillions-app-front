@@ -20,6 +20,7 @@ export interface ConfigBotsDeriv {
 }
 
 type tradeOptions = {
+  type: string;
   symbol: string;
   currency: string;
   duration: number;
@@ -35,6 +36,7 @@ type prompt = {
 }
 
 export interface Operation {
+  result: any;
   id: string;
   type: 'buy' | 'sell';
   symbol: string;

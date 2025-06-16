@@ -1,12 +1,13 @@
-// useTabs.tsx
-import { useDeriv } from "@/contexts/DerivContext";
-import { BotsDeriv, OperationState } from "@/models/deriv";
-import { useEffect, useState } from "react";
+// @/hooks/useTabs.tsx
+// RESPONSABILIDADE: Gerir abas, seleção de bots e os prompts de configuração.
+// NENHUMA LÓGICA DE API AQUI.
+
+import { BotsDeriv } from "@/models/deriv";
+import { useCallback, useEffect, useState } from "react";
 
 type Tab = { id: number; title: string };
 
 export const useTabs = () => {
-  const { startOperation } = useDeriv();
   const [tabs, setTabs] = useState<Tab[]>(() => {
     if (typeof window !== "undefined") {
       const savedTabs = localStorage.getItem("tabs");
@@ -23,49 +24,27 @@ export const useTabs = () => {
     return {};
   });
 
-  // Novo estado para rastrear operationState por tabId
-  const [operationsByTab, setOperationsByTab] = useState<{ [tabId: number]: OperationState }>(() => {
-    if (typeof window !== "undefined") {
-      const savedOperations = localStorage.getItem("operationsByTab");
-      return savedOperations ? JSON.parse(savedOperations) : {};
-    }
-    return {};
-  });
-
   useEffect(() => {
     localStorage.setItem("tabs", JSON.stringify(tabs));
+  }, [tabs]);
+
+  useEffect(() => {
     localStorage.setItem("selectedBots", JSON.stringify(selectedBots));
-    localStorage.setItem("operationsByTab", JSON.stringify(operationsByTab));
-  }, [tabs, selectedBots, operationsByTab]);
+  }, [selectedBots]);
 
   const addTab = () => {
-    const newTabId = tabs.length + 1;
+    const newTabId = (tabs[tabs.length - 1]?.id || 0) + 1;
     const newTab = { id: newTabId, title: `Aba ${newTabId}` };
     setTabs((prev) => [...prev, newTab]);
-    setSelectedBots((prev) => {
-      const newSelected = { ...prev };
-      delete newSelected[newTabId];
-      return newSelected;
-    });
-    setOperationsByTab((prev) => {
-      const newOperations = { ...prev };
-      delete newOperations[newTabId];
-      return newOperations;
-    });
   };
 
   const removeTab = (tabId: number) => {
-    if (tabId === 1) return;
+    if (tabs.length <= 1) return; // Não remover a última aba
     setTabs((prev) => prev.filter((tab) => tab.id !== tabId));
     setSelectedBots((prev) => {
       const newSelected = { ...prev };
       delete newSelected[tabId];
       return newSelected;
-    });
-    setOperationsByTab((prev) => {
-      const newOperations = { ...prev };
-      delete newOperations[tabId];
-      return newOperations;
     });
   };
 
@@ -82,53 +61,40 @@ export const useTabs = () => {
       delete newSelected[tabId];
       return newSelected;
     });
-    setOperationsByTab((prev) => {
-      const newOperations = { ...prev };
-      delete newOperations[tabId];
-      return newOperations;
-    });
   };
 
-  const startSelectedBot = async (bot: BotsDeriv, tabId: number) => {
-    console.log(bot);
-    const welcomeMessage = bot.config.welcome_message;
-    const prompts = bot.config.prompts;
+  /**
+   * Mostra os prompts ao usuário para configurar o bot.
+   * Retorna o bot com a configuração preenchida ou null se o usuário cancelar.
+   */
+  const getBotWithUserConfig = useCallback(async (bot: BotsDeriv): Promise<BotsDeriv | null> => {
+    // Cria uma cópia profunda para não modificar o objeto original
+    const configuredBot = JSON.parse(JSON.stringify(bot));
 
-    if (welcomeMessage) {
-      window.alert(welcomeMessage);
+    const { welcome_message, prompts } = configuredBot.config;
+
+    if (welcome_message) {
+      // Idealmente, use um modal em vez de window.alert
+      alert(welcome_message);
     }
 
-    for (let index = 0; index < prompts.length; index++) {
-      const element = prompts[index];
-      let prompt = null;
-
-      while (prompt === null || prompt.trim() === "") {
-        prompt = window.prompt(element.text);
-        if (prompt === null) {
-          console.log("Usuário cancelou o prompt.");
-          return;
+    for (const promptConfig of prompts) {
+      let userInput = null;
+      while (userInput === null || userInput.trim() === "") {
+        userInput = prompt(promptConfig.text); // Use window.prompt ou um modal customizado
+        if (userInput === null) {
+          console.log("Usuário cancelou a configuração do bot.");
+          return null; // Retorna null se o usuário cancelar
         }
-        if (prompt.trim() === "") {
-          window.alert("Por favor, insira um valor válido.");
+        if (userInput.trim() === "") {
+          alert("Por favor, insira um valor válido.");
         }
       }
-
-      element.value = prompt;
-      console.log(`Prompt ${element.text}: ${prompt}`);
+      promptConfig.value = userInput;
     }
 
-    setOperationsByTab((prev) => ({
-      ...prev,
-      [tabId]: {
-        isRunning: true,
-        operations: [],
-        totalProfit: 0,
-        winRate: 0,
-      },
-    }));
+    return configuredBot;
+  }, []);
 
-    await startOperation(bot.config, tabId);
-  };
-
-  return { tabs, selectedBots, operationsByTab, addTab, removeTab, selectBot, clearSelectedBot, startSelectedBot };
+  return { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot, getBotWithUserConfig };
 };

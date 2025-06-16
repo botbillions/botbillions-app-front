@@ -77,6 +77,9 @@ export const StatusContainer = styled.div`
   border-radius: 8px;
   padding: 16px;
   margin-top: 16px;
+  & p{
+    color: #000;
+  }
 `;
 
 export const StatusHeader = styled.div`
