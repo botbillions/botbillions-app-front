@@ -147,7 +147,7 @@ export const DerivProvider = ({ children }: { children: React.ReactNode }) => {
   const updateUserBalance = useCallback((newBalance: number) => {
     setUserDeriv(currentUser => {
       if (!currentUser) return null;
-      const updatedUser = { ...currentUser, balance: newBalance.toString() };
+      const updatedUser = { ...currentUser, balance: newBalance };
       document.cookie = `derivData=${JSON.stringify(updatedUser)}; path=/; max-age=86400;`;
       return updatedUser;
     });

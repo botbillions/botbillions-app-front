@@ -65,12 +65,8 @@ export const useTabs = () => {
 
   const clearSelectedBot = (tabId: number) => {
     console.log('[useTabs] Clearing bot for tabId:', tabId, new Error().stack);
-    setSelectedBots((prev) => {
-      const newSelected = { ...prev };
-      delete newSelected[tabId];
-      console.log('[useTabs] Cleared selectedBot for tabId:', tabId, 'new selectedBots:', newSelected);
-      return newSelected;
-    });
+    setSelectedBots({});
+    localStorage.setItem("selectedBots", JSON.stringify({}));
   };
 
   const getBotWithUserConfig = useCallback(async (bot: BotsDeriv): Promise<BotsDeriv | null> => {

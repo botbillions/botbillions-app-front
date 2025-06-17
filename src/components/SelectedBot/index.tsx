@@ -27,7 +27,7 @@ const SelectedBot = ({ userDeriv, selectedBot, onClearSelectedBot, tabId }: ISel
 
   const handleStopBot = () => {
     console.log(`[Aba ${tabId}] Parando bot.`);
-    stopOperations();
+    stopOperations(`[Aba ${tabId}] Parando bot.`);
   };
 
   useEffect(() => {

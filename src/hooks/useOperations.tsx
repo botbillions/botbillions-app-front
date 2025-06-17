@@ -1,152 +1,324 @@
 import { useDeriv } from '@/contexts/DerivContext';
-import { BotsDeriv, ConfigBotsDeriv, OperationState } from '@/models/deriv';
+import { BotsDeriv, ConfigBotsDeriv, Operation } from '@/models/deriv';
 import { DerivApiService } from '@/services/DerivApiService';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Extensão do OperationState para incluir lógica de estratégia
-export interface ExtendedOperationState extends OperationState {
-  consecutiveLosses: number;
-  nextStake: number; // Valor da próxima entrada
+// Estado para controle interno dos parâmetros do bot
+interface BotControlState {
+  initialStake: number;
+  nextStake: number;
+  takeProfit: number | null;
+  stopLoss: number | null;
+  barrier: string;
+  consecutiveLossLimit: number | null; // Limite de perdas consecutivas
+}
+
+// Estado para a UI
+interface OperationState {
+  isRunning: boolean;
+  operations: Operation[];
+  totalProfit: number;
+  winRate: number;
+  consecutiveLosses: number; // Rastrear perdas consecutivas
 }
 
 export const useOperations = (tabId: number) => {
-  const apiService = useRef<DerivApiService | null>(null);
   const { userDeriv, updateUserBalance } = useDeriv();
+  const apiService = useRef<DerivApiService | null>(null);
 
-  const [botConfig, setBotConfig] = useState<ConfigBotsDeriv | null>(null);
-  const [operationLogs, setOperationLogs] = useState<string[]>([]);
-  const [isApiReady, setIsApiReady] = useState(false);
-  const [tradeStatus, setTradeStatus] = useState<'idle' | 'trading'>('idle');
+  // Armazena a configuração do bot atual
+  const botConfigRef = useRef<ConfigBotsDeriv | null>(null);
 
-  const [operationState, setOperationState] = useState<ExtendedOperationState>({
+  // Estado para a UI
+  const [operationState, setOperationState] = useState<OperationState>({
     isRunning: false,
     operations: [],
     totalProfit: 0,
     winRate: 0,
     consecutiveLosses: 0,
-    nextStake: 1,
   });
 
-  const logOperation = useCallback((message: string) => {
-    const logMessage = `[${new Date().toLocaleTimeString()}] [Aba ${tabId}] ${message}`;
-    console.log(logMessage);
-    setOperationLogs((prev) => [logMessage, ...prev.slice(0, 100)]);
-  }, [tabId]);
+  // Estado para os parâmetros de controle do bot
+  const controlState = useRef<BotControlState | null>(null);
 
-  const stopOperations = useCallback((reason?: string) => {
-    logOperation(`Parando operações${reason ? `: ${reason}` : ''}.`);
-    apiService.current?.disconnect();
-    apiService.current = null;
-    setOperationState((prev) => ({ ...prev, isRunning: false }));
-    setTradeStatus('idle');
-    setIsApiReady(false);
-  }, [logOperation]);
+  const [operationLogs, setOperationLogs] = useState<string[]>([]);
+  const [isApiReady, setIsApiReady] = useState(false);
 
-  // --- Lógica de Negociação ---
-  const makeProposalAndBuy = useCallback(() => {
-    if (tradeStatus !== 'trading' || !apiService.current || !botConfig) return;
+  // Ref para o handler de mensagens
+  const messageHandlerRef = useRef<(data: any) => void>(() => { });
 
-    logOperation(`Preparando para comprar contrato com entrada de $${operationState.nextStake.toFixed(2)}.`);
+  const logOperation = useCallback(
+    (message: string) => {
+      const log = `[${new Date().toLocaleTimeString()}] [Aba ${tabId}] ${message}`;
+      console.log(log);
+      setOperationLogs((prev) => [log, ...prev.slice(0, 99)]);
+    },
+    [tabId]
+  );
 
-    const proposalRequest = {
-      proposal: 1,
-      amount: operationState.nextStake,
-      basis: 'stake',
-      contract_type: botConfig.trade_options.type,
-      currency: 'USD',
-      duration: botConfig.trade_options.duration,
-      duration_unit: botConfig.trade_options.durationUnit,
-      symbol: botConfig.trade_options.symbol,
-    };
-
-    const buyContract = (proposalId: string) => {
-      apiService.current?.sendMessage({
-        buy: proposalId,
-        price: 10000, // Preço grande para garantir execução (para propostas de 'stake')
-      });
-    };
-
-    const messageHandler = (data: any) => {
-      if (data.msg_type === 'proposal' && data.proposal) {
-        logOperation(`Proposta ${data.proposal.id} recebida. Comprando...`);
-        buyContract(data.proposal.id);
-      } else if (data.msg_type === 'buy') {
-        logOperation(`Contrato ${data.buy.contract_id} comprado.`);
-      } else if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
-        handleContractClosed(data.proposal_open_contract, messageHandler);
-      } else if (data.error) {
-        logOperation(`Erro na proposta/compra: ${data.error.message}`);
-        setTimeout(makeProposalAndBuy, 5000); // Tenta novamente após um erro
+  const stopOperations = useCallback(
+    (reason: string) => {
+      logOperation(`Parando operações: ${reason}`);
+      if (apiService.current) {
+        apiService.current.removeMessageHandler(messageHandlerRef.current);
+        apiService.current.disconnect();
+        apiService.current = null;
       }
-    };
+      setOperationState((prev) => ({ ...prev, isRunning: false }));
+      setIsApiReady(false);
+    },
+    [logOperation]
+  );
 
-    apiService.current.addTemporaryMessageHandler(messageHandler);
-    apiService.current.sendMessage(proposalRequest);
+  const handleContractResult = useCallback(
+    (contractResult: any) => {
+      const profit = parseFloat(contractResult.profit);
+      const isWin = profit >= 0;
 
-  }, [botConfig, logOperation, tradeStatus, operationState.nextStake]);
+      logOperation(`Resultado: ${isWin ? 'GANHOU' : 'PERDEU'}. Lucro: $${profit.toFixed(2)}`);
 
-  const handleContractClosed = (contractResult: any, temporaryHandler: (data: any) => void) => {
-    apiService.current?.removeMessageHandler(temporaryHandler);
-    const profit = contractResult.profit;
-    const isWin = profit >= 0;
+      if (!controlState.current) {
+        stopOperations('Erro crítico: Estado de controle do bot não encontrado.');
+        return;
+      }
 
-    logOperation(`Contrato fechado. Resultado: ${isWin ? 'GANHOU' : 'PERDEU'}. Lucro: $${profit.toFixed(2)}`);
+      const currentBotConfig = botConfigRef.current;
+      let newNextStake = controlState.current.initialStake;
 
-    setOperationState((prev: any) => {
-      const initialStake = parseFloat(botConfig?.prompts.find(p => p.key === 'initial_stake')?.value || '1');
-      let newNextStake = initialStake;
-      let newConsecutiveLosses = prev.consecutiveLosses;
+      if (!isWin && currentBotConfig?.strategy?.type === 'martingale') {
+        newNextStake = controlState.current.nextStake * currentBotConfig.strategy.multiplier;
+        logOperation(`Martingale: Próxima entrada será $${newNextStake.toFixed(2)}.`);
+      }
 
-      if (isWin) {
-        newConsecutiveLosses = 0;
-        // Lógica Soros poderia ser adicionada aqui
-      } else { // Loss
-        newConsecutiveLosses += 1;
-        if (botConfig?.strategy?.type === 'martingale') {
-          newNextStake = prev.nextStake * (botConfig.strategy.multiplier || 2);
-          logOperation(`Martingale ativado. Próxima entrada: $${newNextStake.toFixed(2)}`);
+      controlState.current.nextStake = newNextStake;
+
+      setOperationState((prev) => {
+        const newTotalProfit = prev.totalProfit + profit;
+        const newConsecutiveLosses = isWin ? 0 : prev.consecutiveLosses + 1;
+        const newOperations: Operation[] = [
+          ...prev.operations,
+          {
+            id: contractResult.contract_id,
+            result: isWin ? 'win' : 'loss',
+            profit,
+            stake: parseFloat(contractResult.buy_price),
+            timestamp: new Date().toISOString(),
+          },
+        ];
+        const winRate = (newOperations.filter((op) => op.result === 'win').length / newOperations.length) * 100;
+
+        logOperation(
+          `Atualizando estado: Operações=${newOperations.length}, Lucro Total=$${newTotalProfit.toFixed(
+            2
+          )}, Taxa de Acerto=${winRate.toFixed(2)}%, Perdas Consecutivas=${newConsecutiveLosses}`
+        );
+
+        if (controlState.current?.takeProfit && newTotalProfit >= controlState.current.takeProfit) {
+          stopOperations('Meta de lucro atingida');
+        } else if (controlState.current?.stopLoss && newTotalProfit <= -controlState.current.stopLoss) {
+          stopOperations('Limite de perda atingido');
+        } else if (
+          controlState.current?.consecutiveLossLimit &&
+          newConsecutiveLosses >= controlState.current.consecutiveLossLimit
+        ) {
+          stopOperations('Limite de perdas consecutivas atingido');
         }
-      }
 
-      const newTotalProfit = prev.totalProfit + profit;
-      const newOperations = [...prev.operations, { id: contractResult.contract_id, result: isWin ? 'win' : 'loss', profit, /* ...outros dados */ }];
-      const newWinRate = (newOperations.filter(op => op.result === 'win').length / newOperations.length) * 100;
+        return {
+          ...prev,
+          operations: newOperations,
+          totalProfit: newTotalProfit,
+          winRate,
+          consecutiveLosses: newConsecutiveLosses,
+        };
+      });
 
-      return { ...prev, totalProfit: newTotalProfit, operations: newOperations, winRate: newWinRate, consecutiveLosses: newConsecutiveLosses, nextStake: newNextStake };
-    });
+      // Solicitar atualização do saldo após a operação
+      apiService.current?.sendMessage({ balance: 1 });
+    },
+    [logOperation, stopOperations]
+  );
 
-    // Agenda a próxima operação
-    setTimeout(makeProposalAndBuy, 2000);
-  };
-
-  // --- Inicialização e Efeitos ---
-  const startOperations = useCallback(async (bot: BotsDeriv) => {
-    if (!userDeriv?.token) {
-      logOperation("Erro fatal: Token de autenticação não encontrado.");
+  const requestProposal = useCallback(() => {
+    if (!apiService.current?.isConnected() || !controlState.current || !operationState.isRunning) {
+      logOperation(
+        `Não foi possível solicitar proposta: API=${apiService.current?.isConnected() ? 'conectada' : 'desconectada'
+        }, ControlState=${controlState.current ? 'presente' : 'ausente'}, isRunning=${operationState.isRunning}`
+      );
       return;
     }
 
-    const initialStake = parseFloat(bot.config.prompts.find(p => p.key === 'initial_stake')?.value || '1');
+    const config = botConfigRef.current;
+    if (!config) return;
 
-    logOperation(`Iniciando bot: ${bot.name} com entrada inicial de $${initialStake.toFixed(2)}`);
-    setBotConfig(bot.config);
-    setOperationState({
-      isRunning: true, operations: [], totalProfit: 0, winRate: 0,
-      consecutiveLosses: 0, nextStake: initialStake
-    });
-    setOperationLogs([]);
+    logOperation(
+      `Solicitando proposta com stake de $${controlState.current.nextStake.toFixed(2)}. Contract Type: ${config.trade_options.contractType
+      }`
+    );
 
-    apiService.current = new DerivApiService(userDeriv.token, () => { }, () => setIsApiReady(true));
-    apiService.current.connect();
-  }, [userDeriv, logOperation]);
+    const validDigitContracts = ['DIGITMATCH', 'DIGITDIFFER', 'DIGITOVER', 'DIGITUNDER'];
+    const isDigitContract = validDigitContracts.includes(config.trade_options.contractType);
+
+    const proposalRequest = {
+      proposal: 1,
+      amount: controlState.current.nextStake.toFixed(2),
+      basis: 'stake',
+      contract_type: config.trade_options.contractType,
+      currency: config.trade_options.currency,
+      duration: config.trade_options.duration,
+      duration_unit: config.trade_options.durationUnit,
+      symbol: config.trade_options.symbol,
+      ...(isDigitContract && { barrier: controlState.current.barrier }),
+    };
+
+    apiService.current.sendMessage(proposalRequest);
+  }, [logOperation, operationState.isRunning]);
 
   useEffect(() => {
-    if (isApiReady && operationState.isRunning) {
-      logOperation("API pronta. Iniciando ciclo de negociação.");
-      setTradeStatus('trading');
-      makeProposalAndBuy();
+    messageHandlerRef.current = (data: any) => {
+      if (data.error) {
+        logOperation(`ERRO: ${data.error.message} (Código: ${data.error.code})`);
+        if (['InvalidToken', 'AuthorizationRequired'].includes(data.error.code)) {
+          stopOperations(`Erro crítico: ${data.error.message}`);
+        }
+        return;
+      }
+      switch (data.msg_type) {
+        case 'balance':
+          logOperation(`Saldo atualizado: $${data.balance.balance}`);
+          updateUserBalance?.(data.balance.balance);
+          break;
+        case 'proposal':
+          logOperation(`Proposta recebida. Comprando com stake de $${data.proposal.display_value}...`);
+          apiService.current?.sendMessage({ buy: data.proposal.id, price: 10000 });
+          break;
+        case 'buy':
+          if (data.buy?.buy_price) {
+            logOperation(`Contrato ${data.buy.contract_id} comprado.`);
+            apiService.current?.sendMessage({
+              proposal_open_contract: 1,
+              contract_id: data.buy.contract_id,
+              subscribe: 1,
+            });
+          }
+          break;
+        case 'proposal_open_contract':
+          if (data.proposal_open_contract?.is_sold) {
+            handleContractResult(data.proposal_open_contract);
+          }
+          break;
+      }
+    };
+  }, [logOperation, stopOperations, updateUserBalance, handleContractResult]);
+
+  const startOperations = useCallback(
+    async (bot: BotsDeriv) => {
+      if (!userDeriv?.token) {
+        setOperationLogs([`[${new Date().toLocaleTimeString()}] [ERRO] Token do usuário não encontrado.`]);
+        return;
+      }
+
+      setOperationState({ isRunning: true, operations: [], totalProfit: 0, winRate: 0, consecutiveLosses: 0 });
+      const initialLog = `[${new Date().toLocaleTimeString()}] [Aba ${tabId}] Iniciando Bot: ${bot.name}`;
+      setOperationLogs([initialLog]);
+
+      botConfigRef.current = bot.config;
+      logOperation(`Configuração do Bot: ${JSON.stringify(bot.config.trade_options)}`);
+
+      const findValue = (keys: string[]) => {
+        const prompt = bot.config.prompts.find((p) => keys.some((key) => p.text.toLowerCase().includes(key)));
+        return prompt?.value;
+      };
+
+      // >>>>> ALTERAÇÃO PRINCIPAL AQUI <<<<<
+
+      const initialBalance = userDeriv?.balance || 0;
+
+      // VERIFICAÇÃO CRÍTICA: Se o saldo não for válido, ABORTA a operação.
+      if (initialBalance <= 0) {
+        const reason = 'ERRO CRÍTICO: Saldo da conta é zero ou indisponível. Operações abortadas.';
+        logOperation(reason);
+        // Usa a função `stopOperations` para redefinir o estado e garantir a parada completa.
+        stopOperations(reason);
+        return; // Interrompe completamente a execução da função `startOperations`.
+      }
+
+      // Se o código chegou até aqui, o saldo é válido e podemos continuar.
+      logOperation(`Saldo inicial obtido do contexto: $${initialBalance}.`);
+
+      const initialStake = parseFloat(findValue(['valor de entrada']) || '1');
+      const takeProfitValue = parseFloat(findValue(['meta de lucro']) || '0');
+      const stopLossValue = parseFloat(
+        findValue(['limite de perda', 'limite de perdas', 'limite de perca', 'limite de percas']) || '0'
+      );
+      const consecutiveLossLimitValue = parseFloat(findValue(['perdas seguidas', 'stop loss']) || '7');
+      const barrierValue = findValue(['barrier']) || '3';
+
+      const defaultTakeProfit = initialBalance * 0.01;
+
+      controlState.current = {
+        initialStake,
+        nextStake: initialStake,
+        takeProfit: takeProfitValue > 0 ? takeProfitValue : defaultTakeProfit,
+        stopLoss: stopLossValue > 0 ? stopLossValue : null,
+        barrier: barrierValue,
+        consecutiveLossLimit: consecutiveLossLimitValue > 0 ? consecutiveLossLimitValue : null,
+      };
+
+      logOperation(
+        `Parâmetros configurados: Stake Inicial=$${initialStake.toFixed(2)}, Take Profit=${controlState.current.takeProfit?.toFixed(2) || 'null'
+        }, Stop Loss=${controlState.current.stopLoss?.toFixed(2) || 'null'}, Limite de Perdas Consecutivas=${controlState.current.consecutiveLossLimit || 'null'
+        }`
+      );
+
+      const validContractTypes = ['CALL', 'PUT', 'DIGITMATCH', 'DIGITDIFFER', 'DIGITOVER', 'DIGITUNDER'];
+      if (!validContractTypes.includes(bot.config.trade_options.contractType)) {
+        logOperation(`ERRO: Contract Type inválido: ${bot.config.trade_options.contractType}`);
+        stopOperations('Contract Type inválido');
+        return;
+      }
+
+      apiService.current = new DerivApiService(
+        userDeriv.token,
+        () => {
+          logOperation('API Autenticada com sucesso.');
+          setIsApiReady(true);
+          apiService.current?.sendMessage({ balance: 1, subscribe: 1 });
+        },
+        (e) => stopOperations(`Erro de API: ${e.type}`)
+      );
+      apiService.current.addMessageHandler(messageHandlerRef.current);
+      apiService.current.connect();
+    },
+    [userDeriv, tabId, logOperation, stopOperations]
+  );
+
+  useEffect(() => {
+    if (!operationState.isRunning || !isApiReady) {
+      logOperation('Ciclo de operação pausado: Bot não está rodando ou API não está pronta.');
+      return;
     }
-  }, [isApiReady, operationState.isRunning, makeProposalAndBuy]);
+
+    logOperation(`Agendando nova proposta. Operações atuais: ${operationState.operations.length}`);
+    const timer = setTimeout(() => {
+      if (apiService.current?.isConnected()) {
+        requestProposal();
+      } else {
+        logOperation('WebSocket não conectado. Não foi possível solicitar proposta.');
+      }
+    }, operationState.operations.length === 0 ? 100 : 2000);
+
+    return () => clearTimeout(timer);
+  }, [operationState.isRunning, operationState.operations, isApiReady, requestProposal]);
+
+  // Limpeza ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      if (apiService.current) {
+        stopOperations('Componente desmontado.');
+      }
+    };
+  }, [stopOperations]);
 
   return { operationState, startOperations, stopOperations, operationLogs };
 };

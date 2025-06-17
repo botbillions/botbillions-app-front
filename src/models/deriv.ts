@@ -1,6 +1,8 @@
+// src/models/deriv.ts (ou onde estiver) - COMPLETO E ATUALIZADO
+
 export interface UserDeriv {
   email: string;
-  balance: string;
+  balance: number;
   loginid: string;
   account_type: "Virtual" | "Real";
   currency: string;
@@ -13,39 +15,39 @@ export interface BotsDeriv {
   config: ConfigBotsDeriv;
 }
 
+// Interface para a estratégia
+export type BotStrategy = {
+  type: 'martingale';
+  multiplier: number;
+} | null;
+
 export interface ConfigBotsDeriv {
-  strategy: any;
+  strategy: BotStrategy; // <-- ADICIONADO
   prompts: prompt[];
   trade_options: tradeOptions;
   welcome_message: string;
 }
 
 type tradeOptions = {
-  type: string;
   symbol: string;
-  currency: string;
-  duration: number;
   contractType: string;
+  duration: number;
   durationUnit: string;
-}
+  currency: string;
+};
 
 type prompt = {
-  key: any;
   id: string;
   text: string;
-  value?: string;
-}
+  value?: string; // Valor preenchido pelo usuário
+};
 
 export interface Operation {
-  result: any;
   id: string;
-  type: 'buy' | 'sell';
-  symbol: string;
-  amount: number;
-  price: number;
+  result: 'win' | 'loss';
+  profit: number;
+  stake: number; // Valor da entrada
   timestamp: string;
-  status: 'pending' | 'completed' | 'failed';
-  profit?: number;
 }
 
 export interface OperationState {
