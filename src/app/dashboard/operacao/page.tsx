@@ -3,9 +3,9 @@
 import Body from "@/components/Body";
 import BtnAction from "@/components/BtnAction";
 import Container from "@/components/Container";
-import Loading from "@/components/Loading";
 import Header from "@/components/Header";
 import Inicio from "@/components/icons/Inicio";
+import Loading from "@/components/Loading";
 import Sidebar from "@/components/Sidebar";
 import { MenuItemST } from "@/components/Sidebar/styles";
 import { Tabs } from "@/components/Tabs";
@@ -24,7 +24,7 @@ const Operacao = () => {
   const { user } = useUser();
   const { botsDeriv, userDeriv, status } = useDeriv();
   const searchParams = useSearchParams();
-  const { tabs, selectedBots, addTab, removeTab, selectBot, clearSelectedBot } = useTabs();
+  const { tabs, selectedBots, addTab, removeTab } = useTabs();
 
   const activeTabId = parseInt(searchParams.get("tab") || "1", 10);
 
@@ -34,7 +34,6 @@ const Operacao = () => {
         logout={async () => {
           localStorage.clear();
           localStorage.setItem("tabs", JSON.stringify([{ id: 1, title: "Aba 1" }]));
-          localStorage.setItem("selectedBots", JSON.stringify({}));
           await signOutAction();
         }}
       >
@@ -70,10 +69,7 @@ const Operacao = () => {
                     key={tab.id}
                     tabId={tab.id}
                     activeTabId={activeTabId}
-                    selectedBot={selectedBots[tab.id] || null}
                     bots={botsDeriv}
-                    onSelectBot={selectBot}
-                    onClearSelectedBot={clearSelectedBot}
                     userDeriv={userDeriv}
                   />
                 </div>

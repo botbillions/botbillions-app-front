@@ -1,7 +1,3 @@
-// @/hooks/useTabs.tsx
-// RESPONSABILIDADE: Gerir abas, seleção de bots e os prompts de configuração.
-// NENHUMA LÓGICA DE API AQUI.
-
 import { BotsDeriv } from "@/models/deriv";
 import { useCallback, useEffect, useState } from "react";
 
@@ -19,6 +15,7 @@ export const useTabs = () => {
   const [selectedBots, setSelectedBots] = useState<{ [tabId: number]: BotsDeriv | null }>(() => {
     if (typeof window !== "undefined") {
       const savedSelectedBots = localStorage.getItem("selectedBots");
+      console.log('[useTabs] Initializing selectedBots from localStorage:', savedSelectedBots);
       return savedSelectedBots ? JSON.parse(savedSelectedBots) : {};
     }
     return {};
@@ -29,7 +26,14 @@ export const useTabs = () => {
   }, [tabs]);
 
   useEffect(() => {
-    localStorage.setItem("selectedBots", JSON.stringify(selectedBots));
+    // Evita salvar {} se selectedBots já contém dados no localStorage
+    const currentLocalStorage = localStorage.getItem("selectedBots");
+    if (Object.keys(selectedBots).length > 0 || !currentLocalStorage) {
+      console.log('[useTabs] Saving selectedBots to localStorage:', selectedBots);
+      localStorage.setItem("selectedBots", JSON.stringify(selectedBots));
+    } else {
+      console.log('[useTabs] Skipped saving empty selectedBots, current localStorage:', currentLocalStorage);
+    }
   }, [selectedBots]);
 
   const addTab = () => {
@@ -39,35 +43,38 @@ export const useTabs = () => {
   };
 
   const removeTab = (tabId: number) => {
+    console.log('[useTabs] Removing tabId:', tabId);
     if (tabs.length <= 1) return; // Não remover a última aba
     setTabs((prev) => prev.filter((tab) => tab.id !== tabId));
     setSelectedBots((prev) => {
       const newSelected = { ...prev };
       delete newSelected[tabId];
+      console.log('[useTabs] Cleared selectedBot for tabId:', tabId, 'new selectedBots:', newSelected);
       return newSelected;
     });
   };
 
   const selectBot = (tabId: number, bot: BotsDeriv) => {
-    setSelectedBots((prev) => ({
-      ...prev,
-      [tabId]: bot,
-    }));
-  };
-
-  const clearSelectedBot = (tabId: number) => {
+    console.log('[useTabs] Selecting bot for tabId:', tabId, 'Bot:', bot);
     setSelectedBots((prev) => {
-      const newSelected = { ...prev };
-      delete newSelected[tabId];
+      const newSelected = { ...prev, [tabId]: bot };
+      console.log('[useTabs] Updated selectedBots:', newSelected);
       return newSelected;
     });
   };
 
-  /**
-   * Mostra os prompts ao usuário para configurar o bot.
-   * Retorna o bot com a configuração preenchida ou null se o usuário cancelar.
-   */
+  const clearSelectedBot = (tabId: number) => {
+    console.log('[useTabs] Clearing bot for tabId:', tabId, new Error().stack);
+    setSelectedBots((prev) => {
+      const newSelected = { ...prev };
+      delete newSelected[tabId];
+      console.log('[useTabs] Cleared selectedBot for tabId:', tabId, 'new selectedBots:', newSelected);
+      return newSelected;
+    });
+  };
+
   const getBotWithUserConfig = useCallback(async (bot: BotsDeriv): Promise<BotsDeriv | null> => {
+    console.log('[useTabs] Configuring bot:', bot);
     // Cria uma cópia profunda para não modificar o objeto original
     const configuredBot = JSON.parse(JSON.stringify(bot));
 

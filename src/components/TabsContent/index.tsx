@@ -1,3 +1,4 @@
+import { useTabs } from "@/hooks/useTabs";
 import { BotsDeriv, UserDeriv } from "@/models/deriv";
 import SelectBot from "../SelectBot";
 import SelectedBot from "../SelectedBot";
@@ -5,31 +6,29 @@ import SelectedBot from "../SelectedBot";
 interface TabContentProps {
   tabId: number;
   activeTabId: number;
-  selectedBot: BotsDeriv | null;
   bots: BotsDeriv[] | null;
-  onSelectBot: (tabId: number, bot: BotsDeriv) => void;
-  onClearSelectedBot: (tabId: number) => void;
   userDeriv: UserDeriv | null;
 }
 
 export const TabContent = ({
   tabId,
   activeTabId,
-  selectedBot,
   bots,
-  onSelectBot,
-  onClearSelectedBot,
-  userDeriv
+  userDeriv,
 }: TabContentProps) => {
   if (tabId !== activeTabId) return null;
+
+  const { selectedBots, selectBot, clearSelectedBot } = useTabs();
+  const selectedBot = selectedBots[tabId] || null;
+
+  console.log('[TabContent] Rendering for tabId:', tabId, 'selectedBot:', selectedBot);
 
   if (selectedBot) {
     return (
       <SelectedBot
-        onClearSelectedBot={onClearSelectedBot}
         selectedBot={selectedBot}
+        onClearSelectedBot={clearSelectedBot}
         tabId={tabId}
-        bot={selectedBot}
         userDeriv={userDeriv}
       />
     );
@@ -38,7 +37,7 @@ export const TabContent = ({
   return (
     <SelectBot
       bots={bots}
-      onSelectBot={onSelectBot}
+      onSelectBot={selectBot}
       tabId={tabId}
     />
   );

@@ -77,10 +77,7 @@ export const StatusContainer = styled.div`
   border-radius: 8px;
   padding: 16px;
   margin-top: 16px;
-  & p{
-    color: #000;
-  }
-  & h4{
+  & p, h1,h2,h3,h4{
     color: #000;
   }
 `;

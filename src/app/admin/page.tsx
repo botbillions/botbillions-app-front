@@ -12,6 +12,25 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import * as S from "./styles";
 
+type Strategy = {
+  type: 'martingale';
+  multiplier: number;
+} | null;
+
+type Preview = {
+  prompts: { id: string; text: string }[];
+  welcomeMessage: string | null;
+  tradeOptions: {
+    symbol: string;
+    contractType: string;
+    duration: number;
+    durationUnit: string;
+    currency: string;
+  };
+  strategy: Strategy;
+  xmlContent: string;
+};
+
 export default function AdminPage() {
   const { collapsed } = useSidebar();
   const [file, setFile] = useState<File | null>(null);
@@ -19,12 +38,7 @@ export default function AdminPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "success" | "error" | null>(null);
-  const [preview, setPreview] = useState<{
-    prompts: { id: string; text: string }[];
-    welcomeMessage: string | null;
-    tradeOptions: any;
-    xmlContent: string; // Adicionar xmlContent ao preview
-  } | null>(null);
+  const [preview, setPreview] = useState<Preview | null>(null);
   const router = useRouter();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +99,8 @@ export default function AdminPage() {
           prompts: result.preview.prompts,
           welcomeMessage: result.preview.welcomeMessage,
           tradeOptions: result.tradeOptions,
-          xmlContent: result.xmlContent, // Guardar o XML no estado
+          strategy: result.strategy,
+          xmlContent: result.xmlContent,
         });
         setStatus(null);
       } else {
@@ -111,7 +126,8 @@ export default function AdminPage() {
           prompts: preview.prompts,
           welcomeMessage: preview.welcomeMessage,
           tradeOptions: preview.tradeOptions,
-          xmlContent: preview.xmlContent, // Enviar o XML para salvar
+          strategy: preview.strategy,
+          xmlContent: preview.xmlContent,
         }),
       });
 
@@ -188,6 +204,22 @@ export default function AdminPage() {
               <p>
                 <strong>Mensagem de Boas-Vindas:</strong>{" "}
                 {preview.welcomeMessage || "Nenhuma encontrada"}
+              </p>
+              <h3>Estratégia Reconhecida:</h3>
+              {preview.strategy ? (
+                <p>
+                  <strong>Tipo:</strong> {preview.strategy.type} <br />
+                  <strong>Multiplicador:</strong> {preview.strategy.multiplier}x
+                </p>
+              ) : (
+                <p>Nenhuma estratégia de recuperação (Martingale) foi identificada.</p>
+              )}
+              <h3>Opções de Negociação:</h3>
+              <p>
+                <strong>Símbolo:</strong> {preview.tradeOptions.symbol} <br />
+                <strong>Tipo de Contrato:</strong> {preview.tradeOptions.contractType} <br />
+                <strong>Duração:</strong> {preview.tradeOptions.duration} {preview.tradeOptions.durationUnit} <br />
+                <strong>Moeda:</strong> {preview.tradeOptions.currency}
               </p>
               <h3>Prompts Reconhecidos:</h3>
               {preview.prompts.length > 0 ? (

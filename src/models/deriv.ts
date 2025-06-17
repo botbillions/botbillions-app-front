@@ -14,6 +14,7 @@ export interface BotsDeriv {
 }
 
 export interface ConfigBotsDeriv {
+  strategy: any;
   prompts: prompt[];
   trade_options: tradeOptions;
   welcome_message: string;

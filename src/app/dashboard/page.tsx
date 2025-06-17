@@ -9,13 +9,12 @@ import Inicio from "@/components/icons/Inicio";
 import Loading from "@/components/Loading";
 import Sidebar from "@/components/Sidebar";
 import { MenuItemST } from "@/components/Sidebar/styles";
+import { useDeriv } from "@/contexts/DerivContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useUser } from "@/contexts/UserContext";
 import { signOutAction } from "@/services/actions/auth/supabase-actions";
 import Link from "next/link";
-import { useEffect } from "react";
 import * as S from "./styles";
-import { useDeriv } from "@/contexts/DerivContext";
 
 export default function Dashboard() {
   const { collapsed } = useSidebar();
@@ -27,7 +26,6 @@ export default function Dashboard() {
       <Sidebar logout={async () => {
         localStorage.clear();
         localStorage.setItem("tabs", JSON.stringify([{ id: 1, title: "Aba 1" }]));
-        localStorage.setItem("selectedBots", JSON.stringify({}));
         await signOutAction()
       }}>
         <MenuItemST component={<Link href="/dashboard" />} collapsed={collapsed ? "collapsed" : undefined} icon={<Inicio />} active>
