@@ -1,7 +1,4 @@
-
-import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
-
+import { DerivProvider } from "@/contexts/DerivContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { UserProvider } from "@/contexts/UserContext";
 import Cookie from "@/lib/Cookie";
@@ -9,6 +6,30 @@ import GoogleAnalytics from "@/lib/GoogleAnalytics";
 import StyledComponentsRegistry from "@/lib/registry";
 import ClientThemeProvider from "@/providers/ClientThemeProvider";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import type { Metadata } from "next";
+import { Archivo } from "next/font/google";
+import { Suspense } from "react";
+
+function ClientLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense>
+      <ReactQueryProvider>
+        <StyledComponentsRegistry>
+          <ClientThemeProvider>
+            <SidebarProvider>
+              <UserProvider>
+                <DerivProvider>
+                  {children}
+                </DerivProvider>
+              </UserProvider>
+            </SidebarProvider>
+            <Cookie />
+          </ClientThemeProvider>
+        </StyledComponentsRegistry>
+      </ReactQueryProvider>
+    </Suspense>
+  );
+}
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -20,31 +41,13 @@ export const metadata: Metadata = {
   description: "",
 };
 
-const RootLayout = ({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) => {
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-br">
       <GoogleAnalytics />
       <body className={archivo.variable}>
-        <ReactQueryProvider>
-          <StyledComponentsRegistry>
-            <ClientThemeProvider>
-              <SidebarProvider>
-                <UserProvider>
-                  {children}
-                </UserProvider>
-              </SidebarProvider>
-              <Cookie />
-            </ClientThemeProvider>
-          </StyledComponentsRegistry>
-        </ReactQueryProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
-};
-
-export default RootLayout;
+}

@@ -1,7 +1,5 @@
 import { cookies } from "next/headers";
 
-
-
 export const cookiesHelper = {
   getAll() {
     return cookies().getAll();
@@ -15,4 +13,12 @@ export const cookiesHelper = {
       console.error("Error setting cookies:", error);
     }
   },
+  removeAll(){
+    const cookieStore = cookies();
+    return cookies().getAll().forEach((cookie)=> {
+      if(cookie.name !== "cookie-consent"){
+        cookieStore.delete(cookie.name)
+      }
+    })
+  }
 };

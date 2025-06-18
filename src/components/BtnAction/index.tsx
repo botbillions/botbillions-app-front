@@ -10,20 +10,22 @@ interface BtnActionProps {
   outlined?: string;
   fitContent?: boolean;
   style?: CSSProperties | undefined
+  onclickFn?: any
 }
 
 
-const BtnAction = ({name,link,icon,src,alt, outlined,fitContent,style}:BtnActionProps) => {
+const BtnAction = ({ name, link, icon, src, alt, outlined, fitContent, style, onclickFn }: BtnActionProps) => {
   return (
-    <S.Wrapper 
+    <S.Wrapper
       fitContent={fitContent ? "fitContent" : undefined}
-      outlined={outlined ? "outlined" : undefined} 
-      href={link ?? "#"} 
+      outlined={outlined ? "outlined" : undefined}
+      href={link ?? "#"}
       style={style}
+      onClick={onclickFn}
     >
-      
+
       {icon && (
-        <S.ButtonIcon 
+        <S.ButtonIcon
           src={src}
           alt={alt}
         />)

@@ -1,42 +1,47 @@
 "use client";
 
-import { useLogin } from "@/hooks/useLogin";
+import { userAuthenticated } from "@/services/actions/auth/supabase-actions";
 import { User } from "@supabase/supabase-js";
-import { useSearchParams } from "next/navigation";
-import { createContext, useContext, useEffect } from "react";
-
-type UserDeriv = {
-  email: string;
-};
+import { createContext, useContext, useEffect, useState } from "react";
 
 type UserContextType = {
   user: User | null;
-  userDeriv: UserDeriv | null;
   fetchUser: () => Promise<void>;
-  fetchUserDeriv: (urlSearch?: string) => Promise<void>;
+  status: "error" | "success" | "loading";
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
+type Status = "error" | "success" | "loading";
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const searchParams = useSearchParams();
-  const urlSearch = searchParams.toString();
+  const [user, setUser] = useState<User | null>(null);
+  const [status, setStatus] = useState<Status>("loading");
 
-  const { fetchUser, fetchUserDeriv, user, userDeriv } = useLogin(urlSearch);
+  const fetchUser = async () => {
+    setStatus("loading");
+    const authenticatedUser = await userAuthenticated();
+
+    if (authenticatedUser) {
+      setUser(authenticatedUser);
+      setStatus("success");
+    } else {
+      setUser(null);
+      setStatus("error");
+    }
+
+  };
 
   useEffect(() => {
     fetchUser();
-    fetchUserDeriv();
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, userDeriv, fetchUser, fetchUserDeriv }}>
+    <UserContext.Provider value={{ user, status, fetchUser }}>
       {children}
     </UserContext.Provider>
   );
 };
 
-// Hook para usar o contexto
 export const useUser = () => {
   const context = useContext(UserContext);
   if (!context) {

@@ -1,13 +1,12 @@
 "use client";
 
 import BtnAction from "@/components/BtnAction";
-import { FormMessage } from "@/components/forms/form-message";
 import { Label } from "@/components/forms/label";
 import { StyledForm, StyledInput, StyledTitle } from "@/components/forms/styles";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { useLogin } from "@/hooks/useLogin";
-import { signUpAction } from "@/services/actions/supabase-actions";
-import type { CreateNewFormData } from "@/utils/utils";
+import type { CreateNewFormData } from "@/models/form";
+import { signUpAction } from "@/services/actions/auth/supabase-actions";
 import { useMutation } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -57,7 +56,6 @@ export default function Create() {
               {...register("password")}
             />
             <SubmitButton pendingText="Criando ..." isPending={isPending} >Criar</SubmitButton>
-            <FormMessage />
           </S.InputContainer>
         </StyledForm>
       </S.ContainerLogin>

@@ -1,7 +1,8 @@
 "use server";
 
+import { type FormDataProps } from "@/models/form";
+import { cookiesHelper } from "@/utils/cookies";
 import { createClient } from "@/utils/supabase/server";
-import { type FormDataProps } from "@/utils/utils";
 import { redirect } from "next/navigation";
 
 export const userAuthenticated = async () => {
@@ -15,6 +16,8 @@ export const userAuthenticated = async () => {
 export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  cookiesHelper.removeAll();
+  
   return redirect("/");
 };
 
@@ -23,18 +26,53 @@ export const signInAction = async (formData?: FormDataProps) => {
   const password = formData?.password as string;
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  // Fazer login e pegar os dados do usuário
+  const { data: { user }, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
+  // Tratamento de erros iniciais
   if (error) {
-    let errorMessage =
-      error.code === "invalid_credentials" ? "Credenciais inválidas" : "Email não confirmado";
-    return { success: false, message: errorMessage };
+    const errorMessages = {
+      'invalid_credentials': 'Credenciais inválidas',
+      'email_not_confirmed': 'Email não confirmado',
+      'user_not_found': 'Usuário não encontrado'
+    };
+    
+    const errorMessage = errorMessages[error.code as keyof typeof errorMessages] || 
+                        'Ocorreu um erro durante o login';
+    
+    return {
+      success: false,
+      message: errorMessage,
+      error: error.code
+    };
   }
 
-  return redirect("/dashboard");
+  // Verificar se temos um usuário válido
+  if (!user) {
+    return {
+      success: false,
+      message: 'Usuário não encontrado',
+      error: 'user_not_found'
+    };
+  }
+
+  // Verificar se o email foi confirmado
+  if (!user.email_confirmed_at) {
+    return {
+      success: false,
+      message: 'Por favor, confirme seu email antes de fazer login',
+      error: 'email_not_confirmed'
+    };
+  }
+
+  return {
+    success: true,
+    redirect: '/dashboard',
+    message: 'Login realizado com sucesso'
+  };
 };
 
 export const signInAdminAction = async (formData?: FormDataProps) => {
@@ -42,22 +80,55 @@ export const signInAdminAction = async (formData?: FormDataProps) => {
   const password = formData?.password as string;
   const supabase = await createClient();
 
-  const { data:{user},error } = await supabase.auth.signInWithPassword({
+  const { data: { user }, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
-    let errorMessage =
-      error.code === "invalid_credentials" ? "Credenciais inválidas" : "Email não confirmado";
-    return { success: false, message: errorMessage };
-  }
-  if(user){
-    const {data:admin} = await supabase.from('admin').select('user_id').eq('user_id',user.id).single();
-    console.log(admin)
-    return redirect("/admin");
+    const errorMessages = {
+      'invalid_credentials': 'Credenciais inválidas',
+      'email_not_confirmed': 'Email não confirmado',
+      'user_not_found': 'Usuário não encontrado'
+    };
+    
+    const errorMessage = errorMessages[error.code as keyof typeof errorMessages] || 
+                        'Ocorreu um erro durante o login';
+    
+    return {
+      success: false,
+      message: errorMessage,
+      error: error.code
+    };
   }
 
+  if (!user) {
+    return {
+      success: false,
+      message: 'Usuário não encontrado',
+      error: 'user_not_found'
+    };
+  }
+
+  const { data: admin, error: adminError } = await supabase
+    .from('admin')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (adminError || !admin) {
+    return {
+      success: false,
+      message: 'Este usuário não tem permissões de administrador',
+      error: 'not_admin'
+    };
+  }
+
+  return {
+    success: true,
+    redirect: '/admin',
+    message: 'Login realizado com sucesso'
+  };
 };
 
 export const signUpAction = async (formData?: FormDataProps) => {

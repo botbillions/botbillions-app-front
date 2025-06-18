@@ -2,11 +2,12 @@ import * as S from './styles';
 
 interface ICardProps {
   children: React.ReactNode;
+  id?: string;
 }
 
-const Card = ({ children }: ICardProps) => {
+const Card = ({ children, id }: ICardProps) => {
   return (
-    <S.Wrapper>
+    <S.Wrapper id={id}>
       {children}
     </S.Wrapper>
   )
